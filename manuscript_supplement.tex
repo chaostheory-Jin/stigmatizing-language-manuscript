@@ -1,0 +1,481 @@
+\documentclass[unnumsec,webpdf,contemporary,large]{oup-authoring-template}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{float}
+\usepackage{setspace}
+\graphicspath{{figures/}}
+\newcommand{\visiblealt}[1]{\figalttext{Alt text: #1}\par\smallskip\noindent{\small\textbf{Alt text:} #1}\par}
+\begin{document}
+\doublespacing
+\renewcommand{\thetable}{S\arabic{table}}
+\renewcommand{\thefigure}{S\arabic{figure}}
+
+\journaltitle{Journal of the American Medical Informatics Association}
+\DOI{To be assigned}
+\copyrightyear{2026}
+\pubyear{2026}
+\vol{XX}
+\issue{x}
+\access{To be assigned}
+\appnotes{Supplementary Material}
+\firstpage{1}
+
+\title[Supplementary material]{Supplementary Material for: From Clinician-Facing Narrative to Patient-Facing Instructions: How Stigmatizing Language Differs Across Clinical Notes}
+\abstract{Supplementary methods, complete primary binary results, sensitivity analyses, and reproducibility requirements.}
+\keywords{supplementary material}
+\maketitle
+\onecolumn
+
+\section{Supplementary Methods}
+
+\subsection{Section parsing and cohort construction}
+
+Discharge Instructions (DI) was defined as the patient-facing section, while the remaining discharge-summary sections were classified as clinician-facing. The empirical analyses compared DI with Brief Hospital Course (BHC) as the primary clinician-facing section and History of Present Illness (HPI) as a secondary clinician-facing section. Discharge summaries were segmented at curated headers occurring at the start of a line, with adjacent headers delimiting a section body. The primary cohort required both BHC and DI, with at least 50 tokens in each. HPI was included only in its separate paired comparison. The parser scanned 331,793 notes, found 290,005 with both primary sections, and retained 259,207 after the length threshold.
+
+The group-analysis build linked every retained note to note-level subject and admission identifiers. Twenty notes had no matching HOSP patient or admission record and lacked sex and age; complete-case modeling excluded these notes. The final group-analysis cohort contained 259,187 notes, 259,187 admissions, 125,271 subjects, and 518,374 paired BHC and DI rows. Missing insurance was coded as non-Medicaid for 2,793 notes. Missing language was coded as English or LEP=0 for 398 notes. These were coding decisions rather than row exclusions.
+
+\subsection{Training data}
+
+Classifier training used the Harrigian annotation resource and 89-keyword lexicon. The binary target combined negative, disbelief, and difficult annotations as stigma; positive, neutral, and exclude annotations formed non-stigma. The 5,043 examples were split by note identifier into 4,037 training, 501 validation, and 505 test examples. Primary input contained the keyword-bearing sentence and one adjacent sentence on either side.
+
+\subsection{Stigma classifier and candidate scoring}
+
+We fine-tuned GatorTron-base as the primary binary stigma classifier and selected it by validation macro-F1 from 12 sentence-window encoders. Training used AdamW, an initial learning rate of \(2\times10^{-5}\), a linear scheduler, training and evaluation batch sizes of 16 and 32, 20 epochs, no class weights, BertTokenizer, and a maximum sequence length of 256. The selected checkpoint was epoch 12, step 3036. Training used the TrainingArguments default seed of 42, PyTorch 2.6.0+cu124, and Transformers 4.56.2. Because the model and new classification head were instantiated before the Trainer applied its seed, the saved weights are the authoritative artifact and exact weight reproduction from seed 42 alone is not guaranteed. The upstream base-model revision was not pinned.
+
+In the analysis corpus, the 89-keyword lexicon identified credibility or obstinance, compliance, and other descriptor candidates using case-insensitive matching with word boundaries. Candidate generation yielded 154,984 spans. Cleaning, normalization, and relocation within sentence context succeeded for 154,895 candidates. The remaining 89 records failed relocation; none failed after relocation.
+
+For the anchor-family analysis, we streamed the saved binary output and aggregated successfully relocated candidates and stigmatizing-language events by section and the three prespecified broad families. Conditional probabilities use scored candidates as the denominator; the 89 relocation failures were retained in a separate audit. Wilson intervals describe each family-specific probability. For BHC-DI and HPI-DI, direct standardization applied the candidate-count distribution pooled across the two compared sections to both sets of family-specific probabilities. We also used the symmetric Kitagawa two-component identity to partition the crude conditional-probability difference into broad-family composition and within-family components. These descriptive components are not causal and do not standardize the exact terms within each family.
+
+For composition, we calculated each section's share of the relevant section-token total within every note. We summarized BHC among BHC plus DI, HPI among HPI plus DI, and each of BHC, HPI, and DI among notes containing all three sections.
+
+\subsection{Section and group-modification models}
+
+The section comparison used a Poisson generalized estimating equation (GEE), log-token offset, exchangeable working correlation, note-level clustering, and robust sandwich standard errors. DI was the reference. Paired Wilcoxon tests provided a directional check.
+
+All group-modification models used a Poisson log link, offset \(\log(n\_tokens)\), subject-level clustering, exchangeable working correlation, Pearson \(X^2\) scale, robust covariance, and at most 100 iterations. The target term was the section by group interaction. An interaction RR greater than 1 indicates a wider BHC to DI rate ratio than the reference.
+
+Layer 1 used:
+\[
+\begin{split}
+n\_stigma \sim section \times (&race + sex + medicaid + lep + age_c + sud + smi\\
+&+ sicklecell + chronicpain + obesity + hiv + esrd + diabetes\\
+&+ charlson_c + log\_los).
+\end{split}
+\]
+The nine identity interactions formed one BH-FDR family. Layer 2 refitted identity models within cohorts with at least 1,000 notes. Each disease cohort formed a separate BH-FDR family. Levels required at least 50 notes, 20 BHC events, and 5 DI events. Post-fit checks required convergence, finite estimates, \(0.02<RR<50\), and a CI ratio below 200. Layer 2 provides disease-stratified identity estimates.
+
+Layer 3 jointly interacted section with all eight disease indicators and with identity and severity covariates. Its eight disease interactions formed one BH-FDR family.
+
+Age diagnostics used the 259,187-note complete-case group-analysis cohort. Crude age-stratified absolute rates used bands of 18--39, 40--64, 65--79, and 80 years or older, exact Poisson intervals for each rate, and log-scale intervals for crude BHC-DI RRs. The nonlinear diagnostic retained the primary Poisson GEE structure, covariates, subject clustering, log-token offset, exchangeable working correlation, Pearson scale, and robust covariance. Age was represented by a restricted cubic spline with knots at 28, 56, 70, and 89 years, corresponding to the 5th, 35th, 65th, and 95th percentiles. A joint robust Wald test evaluated the two section-by-nonlinear-basis terms. Delta-method intervals accompany the BHC-DI gap at each age relative to the fitted gap at the sample mean age of 61.8 years.
+
+\subsection{Sensitivity analyses}
+
+The Word10 binary GatorTron model provided context-window sensitivity. The regenerated Word10 input used the official cleaned and normalized coordinate system, with exact keyword-offset agreement in all 5,043 examples. Ten of 12 sentence-window binary encoders with test accuracy above 0.90 provided encoder sensitivity for the section comparison. Full validation and test performance for all sentence-window and Word10 binary encoders is reported in Supplementary Table S1.
+
+\section{Supplementary Results}
+
+\subsection{Classifier performance}
+
+The primary sentence-window GatorTron classifier achieved validation macro-F1 of 0.9294 and accuracy of 0.9361; test macro-F1 was 0.9281 and accuracy was 0.9327. The Word10 GatorTron sensitivity classifier achieved validation macro-F1 of 0.9509 and accuracy of 0.9561; test macro-F1 was 0.9429 and accuracy was 0.9465.
+
+\begin{table}[H]
+\caption{Validation and test performance of all binary stigma classifiers. Panel A: sentence-window classifiers}
+\label{tab:s_classifier}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}p{0.46\linewidth}rrrr@{}}
+\toprule
+Encoder & Val F1 & Val acc & Test F1 & Test acc \\
+\midrule
+UFNLP/gatortron-base & 0.9294 & 0.9361 & 0.9281 & 0.9327 \\
+dmis-lab/biobert-base-cased-v1.2 & 0.9027 & 0.9142 & 0.9157 & 0.9228 \\
+microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract-fulltext & 0.9267 & 0.9341 & 0.9147 & 0.9208 \\
+allenai/biomed\_roberta\_base & 0.9189 & 0.9261 & 0.9125 & 0.9188 \\
+emilyalsentzer/Bio\_Discharge\_Summary\_BERT & 0.9104 & 0.9202 & 0.9123 & 0.9188 \\
+nlpie/bio-mobilebert & 0.9044 & 0.9142 & 0.9094 & 0.9149 \\
+roberta-base & 0.9252 & 0.9321 & 0.9070 & 0.9129 \\
+emilyalsentzer/Bio\_ClinicalBERT & 0.9110 & 0.9202 & 0.8992 & 0.9069 \\
+nlpie/tiny-clinicalbert & 0.8835 & 0.8982 & 0.8984 & 0.9069 \\
+allenai/scibert\_scivocab\_uncased & 0.9094 & 0.9202 & 0.8948 & 0.9050 \\
+medicalai/ClinicalBERT & 0.8988 & 0.9102 & 0.8914 & 0.8990 \\
+nlpie/clinical-mobilebert & 0.9066 & 0.9182 & 0.8903 & 0.8990 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\ContinuedFloat
+\caption{Validation and test performance of all binary stigma classifiers. Panel B: Word10 classifiers (continued)}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}p{0.46\linewidth}rrrr@{}}
+\toprule
+Encoder & Val F1 & Val acc & Test F1 & Test acc \\
+\midrule
+UFNLP/gatortron-base & 0.9509 & 0.9561 & 0.9429 & 0.9465 \\
+emilyalsentzer/Bio\_Discharge\_Summary\_BERT & 0.9350 & 0.9421 & 0.9426 & 0.9465 \\
+emilyalsentzer/Bio\_ClinicalBERT & 0.9396 & 0.9461 & 0.9362 & 0.9406 \\
+microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract-fulltext & 0.9281 & 0.9361 & 0.9344 & 0.9386 \\
+roberta-base & 0.9315 & 0.9381 & 0.9303 & 0.9347 \\
+dmis-lab/biobert-base-cased-v1.2 & 0.9245 & 0.9321 & 0.9302 & 0.9347 \\
+nlpie/bio-mobilebert & 0.9149 & 0.9242 & 0.9295 & 0.9347 \\
+allenai/biomed\_roberta\_base & 0.9357 & 0.9421 & 0.9292 & 0.9347 \\
+nlpie/clinical-mobilebert & 0.9307 & 0.9381 & 0.9193 & 0.9248 \\
+allenai/scibert\_scivocab\_uncased & 0.9187 & 0.9281 & 0.9184 & 0.9248 \\
+medicalai/ClinicalBERT & 0.9168 & 0.9261 & 0.9028 & 0.9089 \\
+nlpie/tiny-clinicalbert & 0.9168 & 0.9281 & 0.8989 & 0.9089 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent\footnotesize All rows use the binary stigma versus non-stigma target. F1 is macro-F1. GatorTron-base was selected as the primary sentence-window classifier by validation macro-F1. Ten sentence-window encoders with test accuracy greater than 0.90 entered the downstream encoder-sensitivity analysis; medicalai/ClinicalBERT and nlpie/clinical-mobilebert did not meet that threshold. Word10 GatorTron-base provided the downstream context-window sensitivity analysis.\normalsize
+
+\subsection{Primary section results}
+
+\begin{table}[H]
+\caption{Primary sentence-window section counts and rates}
+\label{tab:s_sections}
+\begin{tabular}{lrrrr}
+\toprule
+Section & Notes & Stigmatizing-language events & Tokens & Events per 1,000 tokens \\
+\midrule
+Brief Hospital Course & 259,207 & 64,009 & 99,943,863 & 0.640 \\
+Discharge Instructions & 259,207 & 3,565 & 56,123,304 & 0.064 \\
+History of Present Illness & 252,581 & 29,196 & 59,534,427 & 0.490 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\caption{Primary section comparisons and context-window sensitivity}
+\label{tab:s_section_tests}
+\begin{tabular}{llrrl}
+\toprule
+Context & Comparison & Paired notes & RR & 95\% CI \\
+\midrule
+Sentence, primary & BHC vs DI & 259,207 & 8.210 & 7.963-8.465 \\
+Sentence, primary & HPI vs DI & 252,581 & 7.212 & 6.937-7.497 \\
+Word10, sensitivity & BHC vs DI & 259,207 & 8.26 & 8.01-8.51 \\
+Word10, sensitivity & HPI vs DI & 252,581 & 7.29 & 7.01-7.58 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+All sentence primary GEE and paired Wilcoxon values were \(P<.001\). The zero-preserving section table contained 770,995 BHC, DI, and HPI rows, of which 713,965 had zero stigmatizing-language events.
+
+\begin{table}[H]
+\caption{Classifier performance and BHC versus DI sensitivity estimates across qualifying sentence-window binary encoders}
+\label{tab:s_section_models}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lrrrrrrl}
+\toprule
+Encoder & Val F1 & Val acc & Test F1 & Test acc & GEE RR & 95\% CI & Significant \\
+\midrule
+nlpie/bio-mobilebert & 0.9044 & 0.9142 & 0.9094 & 0.9149 & 8.79 & 8.52-9.07 & Yes \\
+Bio Discharge Summary BERT & 0.9104 & 0.9202 & 0.9123 & 0.9188 & 8.57 & 8.31-8.84 & Yes \\
+allenai/biomed roberta base & 0.9189 & 0.9261 & 0.9125 & 0.9188 & 8.52 & 8.26-8.79 & Yes \\
+dmis-lab/biobert-base-cased-v1.2 & 0.9027 & 0.9142 & 0.9157 & 0.9228 & 8.47 & 8.21-8.73 & Yes \\
+nlpie/tiny-clinicalbert & 0.8835 & 0.8982 & 0.8984 & 0.9069 & 8.37 & 8.12-8.63 & Yes \\
+microsoft/BiomedNLP-PubMedBERT & 0.9267 & 0.9341 & 0.9147 & 0.9208 & 8.36 & 8.10-8.61 & Yes \\
+roberta-base & 0.9252 & 0.9321 & 0.9070 & 0.9129 & 8.28 & 8.03-8.54 & Yes \\
+UFNLP/gatortron-base & 0.9294 & 0.9361 & 0.9281 & 0.9327 & 8.21 & 7.96-8.47 & Yes \\
+Bio ClinicalBERT & 0.9110 & 0.9202 & 0.8992 & 0.9069 & 8.21 & 7.97-8.46 & Yes \\
+allenai/scibert-scivocab-uncased & 0.9094 & 0.9202 & 0.8948 & 0.9050 & 8.09 & 7.85-8.34 & Yes \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\subsection{Layer 1 primary identity results}
+
+\begin{table}[H]
+\caption{Primary Layer 1 identity modification estimates}
+\label{tab:s_layer1}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lrrrrrrrrl}
+\toprule
+Contrast & Notes & Subjects & BHC events & BHC/1k & DI events & DI/1k & RR (95\% CI) & BH q \\
+\midrule
+Age per +1 year & 259,187 & 125,271 & 64,006 & 0.640 & 3,565 & 0.064 & 0.989 (0.986-0.992) & \(1.90\times10^{-14}\) \\
+Black vs White & 38,179 & 15,459 & 13,232 & 0.868 & 600 & 0.078 & 1.102 (0.980-1.238) & 0.188 \\
+Hispanic vs White & 13,532 & 6,202 & 3,305 & 0.666 & 145 & 0.050 & 1.191 (0.967-1.466) & 0.188 \\
+Asian vs White & 8,215 & 4,588 & 1,616 & 0.518 & 93 & 0.053 & 0.917 (0.716-1.174) & 0.554 \\
+Other vs White & 714 & 405 & 157 & 0.509 & 11 & 0.073 & 0.689 (0.326-1.453) & 0.421 \\
+Unknown vs White & 19,075 & 14,068 & 4,498 & 0.602 & 280 & 0.062 & 0.906 (0.788-1.042) & 0.247 \\
+Female vs male & 131,639 & 63,775 & 29,738 & 0.600 & 1,628 & 0.058 & 1.078 (0.996-1.166) & 0.188 \\
+Medicaid vs non-Medicaid & 41,485 & 21,257 & 15,292 & 0.934 & 720 & 0.082 & 1.111 (0.987-1.251) & 0.188 \\
+LEP vs English & 25,727 & 11,682 & 6,545 & 0.640 & 378 & 0.071 & 1.005 (0.870-1.162) & 0.944 \\
+\bottomrule
+\end{tabular}}
+\begin{tablenotes}
+\item Event counts and rates are crude values for the index category named first in each contrast; the age row reports the full group-analysis cohort. Adjusted interaction RRs compare the BHC-DI rate ratio for the index category with the named reference category. BHC, Brief Hospital Course; DI, Discharge Instructions; LEP, limited English proficiency; BH, Benjamini-Hochberg.
+\end{tablenotes}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\linewidth]{figure3_identity.pdf}
+\caption{Identity-related modification of the clinician-facing BHC to patient-facing DI rate ratio. Squares show adjusted interaction RRs and horizontal lines show 95\% CIs. Filled squares met the Benjamini-Hochberg false discovery threshold. BHC, Brief Hospital Course; DI, Discharge Instructions; LEP, limited English proficiency.}
+\visiblealt{Forest plot with nine adjusted identity interaction estimates on a ratio scale. Age is the only filled marker and lies just below 1 with a narrow interval; the intervals for documented race and ethnicity, sex, Medicaid status, and limited English proficiency cross 1.}
+\label{fig:s_identity}
+\end{figure}
+
+\subsection{Layer 2 disease-stratified identity results}
+
+\begin{table}[H]
+\caption{Primary Layer 2 fitted contrasts: full cohort, SUD, and SMI}
+\label{tab:s_layer2a}
+\centering
+\small
+\begin{tabular}{llrrrrr}
+\toprule
+Cohort & Contrast & Notes & Subjects & RR & 95\% CI & BH q \\
+\midrule
+ALL & Black vs White & 38,179 & 15,459 & 1.141 & 1.022-1.275 & 0.087 \\
+ALL & Hispanic vs White & 13,532 & 6,202 & 1.245 & 1.018-1.522 & 0.098 \\
+ALL & Asian vs White & 8,215 & 4,588 & 0.906 & 0.710-1.155 & 0.478 \\
+ALL & Unknown vs White & 19,075 & 14,068 & 0.909 & 0.795-1.039 & 0.242 \\
+ALL & Other vs White & 714 & 405 & 0.709 & 0.339-1.485 & 0.465 \\
+ALL & Female vs male & 131,639 & 63,775 & 1.079 & 1.001-1.163 & 0.105 \\
+ALL & Age per +1 year & 259,187 & 125,271 & 0.990 & 0.987-0.992 & \(1.76\times10^{-14}\) \\
+ALL & Medicaid vs non-Medicaid & 41,485 & 21,257 & 1.105 & 0.987-1.237 & 0.150 \\
+ALL & LEP vs English & 25,727 & 11,682 & 1.044 & 0.904-1.207 & 0.555 \\
+SUD & Black vs White & 4,128 & 2,010 & 1.152 & 0.895-1.482 & 0.612 \\
+SUD & Hispanic vs White & 1,516 & 837 & 1.043 & 0.757-1.436 & 0.924 \\
+SUD & Asian vs White & 181 & 135 & 0.551 & 0.246-1.234 & 0.589 \\
+SUD & Unknown vs White & 2,086 & 1,797 & 0.719 & 0.558-0.928 & 0.089 \\
+SUD & Female vs male & 7,842 & 4,679 & 1.071 & 0.884-1.298 & 0.772 \\
+SUD & Age per +1 year & 24,323 & 14,615 & 1.001 & 0.994-1.007 & 0.924 \\
+SUD & Medicaid vs non-Medicaid & 8,774 & 5,104 & 0.912 & 0.765-1.088 & 0.612 \\
+SUD & LEP vs English & 1,007 & 606 & 1.018 & 0.699-1.483 & 0.924 \\
+SMI & Black vs White & 2,033 & 1,028 & 1.077 & 0.834-1.391 & 0.649 \\
+SMI & Hispanic vs White & 560 & 308 & 1.217 & 0.730-2.031 & 0.602 \\
+SMI & Asian vs White & 172 & 122 & 2.168 & 0.775-6.066 & 0.262 \\
+SMI & Unknown vs White & 780 & 632 & 1.088 & 0.737-1.605 & 0.671 \\
+SMI & Female vs male & 6,112 & 3,320 & 1.235 & 1.016-1.500 & 0.135 \\
+SMI & Age per +1 year & 11,556 & 6,429 & 0.995 & 0.989-1.002 & 0.262 \\
+SMI & Medicaid vs non-Medicaid & 3,216 & 1,951 & 1.306 & 1.042-1.637 & 0.135 \\
+SMI & LEP vs English & 533 & 311 & 0.693 & 0.423-1.135 & 0.262 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\caption{Primary Layer 2 fitted contrasts: chronic pain and obesity}
+\label{tab:s_layer2b}
+\centering
+\small
+\begin{tabular}{llrrrrr}
+\toprule
+Cohort & Contrast & Notes & Subjects & RR & 95\% CI & BH q \\
+\midrule
+Chronic pain & Black vs White & 2,668 & 1,338 & 0.999 & 0.690-1.447 & 0.996 \\
+Chronic pain & Hispanic vs White & 813 & 483 & 1.128 & 0.585-2.176 & 0.996 \\
+Chronic pain & Unknown vs White & 764 & 631 & 0.781 & 0.466-1.307 & 0.808 \\
+Chronic pain & Female vs male & 8,171 & 4,703 & 1.208 & 0.916-1.592 & 0.808 \\
+Chronic pain & Age per +1 year & 14,580 & 8,442 & 0.994 & 0.983-1.005 & 0.808 \\
+Chronic pain & Medicaid vs non-Medicaid & 3,721 & 2,084 & 0.983 & 0.714-1.354 & 0.996 \\
+Chronic pain & LEP vs English & 953 & 630 & 1.079 & 0.615-1.895 & 0.996 \\
+Obesity & Black vs White & 5,947 & 3,101 & 0.982 & 0.683-1.413 & 0.969 \\
+Obesity & Hispanic vs White & 1,560 & 968 & 1.474 & 0.558-3.890 & 0.882 \\
+Obesity & Unknown vs White & 1,922 & 1,512 & 0.989 & 0.603-1.622 & 0.969 \\
+Obesity & Female vs male & 16,009 & 9,238 & 1.371 & 1.013-1.855 & 0.286 \\
+Obesity & Age per +1 year & 27,313 & 16,087 & 1.004 & 0.992-1.017 & 0.882 \\
+Obesity & Medicaid vs non-Medicaid & 5,135 & 3,035 & 1.233 & 0.831-1.829 & 0.882 \\
+Obesity & LEP vs English & 1,730 & 1,044 & 1.015 & 0.468-2.201 & 0.969 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\caption{Primary Layer 2 fitted contrasts: HIV and ESRD}
+\label{tab:s_layer2c}
+\centering
+\small
+\begin{tabular}{llrrrrr}
+\toprule
+Cohort & Contrast & Notes & Subjects & RR & 95\% CI & BH q \\
+\midrule
+HIV & Black vs White & 1,454 & 448 & 0.573 & 0.288-1.140 & 0.263 \\
+HIV & Hispanic vs White & 491 & 195 & 0.706 & 0.265-1.878 & 0.565 \\
+HIV & Unknown vs White & 236 & 153 & 0.313 & 0.133-0.739 & 0.057 \\
+HIV & Female vs male & 1,022 & 340 & 0.832 & 0.445-1.556 & 0.565 \\
+HIV & Age per +1 year & 4,754 & 1,763 & 0.975 & 0.947-1.004 & 0.263 \\
+HIV & Medicaid vs non-Medicaid & 1,578 & 633 & 1.247 & 0.670-2.321 & 0.565 \\
+HIV & LEP vs English & 325 & 111 & 1.883 & 0.787-4.506 & 0.272 \\
+ESRD & Black vs White & 3,475 & 784 & 1.169 & 0.805-1.698 & 0.688 \\
+ESRD & Hispanic vs White & 822 & 208 & 1.189 & 0.511-2.767 & 0.688 \\
+ESRD & Unknown vs White & 595 & 354 & 1.266 & 0.525-3.050 & 0.688 \\
+ESRD & Female vs male & 3,911 & 1,132 & 0.894 & 0.610-1.309 & 0.688 \\
+ESRD & Age per +1 year & 9,422 & 2,900 & 0.984 & 0.970-0.998 & 0.212 \\
+ESRD & Medicaid vs non-Medicaid & 1,189 & 398 & 1.699 & 0.917-3.149 & 0.323 \\
+ESRD & LEP vs English & 1,142 & 311 & 0.718 & 0.367-1.405 & 0.688 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\caption{Primary Layer 2 fitted contrasts: diabetes}
+\label{tab:s_layer2d}
+\centering
+\small
+\begin{tabular}{llrrrrr}
+\toprule
+Cohort & Contrast & Notes & Subjects & RR & 95\% CI & BH q \\
+\midrule
+Diabetes & Black vs White & 15,102 & 5,055 & 1.270 & 1.045-1.544 & 0.056 \\
+Diabetes & Hispanic vs White & 5,046 & 1,820 & 1.067 & 0.775-1.470 & 0.790 \\
+Diabetes & Asian vs White & 2,263 & 1,064 & 0.833 & 0.533-1.301 & 0.690 \\
+Diabetes & Unknown vs White & 5,012 & 3,435 & 0.890 & 0.666-1.189 & 0.690 \\
+Diabetes & Female vs male & 33,152 & 13,475 & 0.981 & 0.845-1.138 & 0.796 \\
+Diabetes & Age per +1 year & 71,103 & 29,229 & 0.988 & 0.982-0.994 & 0.001 \\
+Diabetes & Medicaid vs non-Medicaid & 10,794 & 4,708 & 1.339 & 1.045-1.716 & 0.056 \\
+Diabetes & LEP vs English & 9,868 & 3,955 & 0.930 & 0.727-1.189 & 0.750 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Only age within diabetes reached \(q<0.05\) among disease-stratified contrasts. The ALL rows are a replication under the Layer 2 formula and should not replace the jointly adjusted Layer 1 estimates.
+
+\clearpage
+\begin{table}[H]
+\centering
+\caption{Layer 2 dropped-cell audit}
+\label{tab:s_layer2_drop}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lllrrrr}
+\toprule
+Cohort & Axis or level & Reason & Notes & Subjects & BHC events & DI events \\
+\midrule
+SUD & race=Other & Event floor & 102 & 68 & 40 & 3 \\
+SMI & race=Other & Event floor & 27 & 21 & 18 & 3 \\
+Sickle cell disease & all identity contrasts & Cohort notes below 1,000 & 419 & 131 & NA & NA \\
+Chronic pain & race=Asian & Event floor & 145 & 109 & 39 & 2 \\
+Chronic pain & race=Other & Event floor & 26 & 21 & 11 & 0 \\
+Obesity & race=Asian & Event floor & 185 & 125 & 40 & 1 \\
+Obesity & race=Other & Event floor & 105 & 64 & 24 & 0 \\
+HIV & race=Asian & Event floor & 37 & 18 & 23 & 0 \\
+HIV & race=Other & Event floor & 18 & 6 & 0 & 0 \\
+ESRD & race=Asian & Event floor & 370 & 127 & 74 & 2 \\
+ESRD & race=Other & Event floor & 71 & 31 & 11 & 1 \\
+Diabetes & race=Other & Event floor & 215 & 104 & 51 & 2 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\subsection{Layer 3 primary disease results}
+
+\begin{table}[H]
+\caption{Primary Layer 3 disease modification estimates}
+\label{tab:s_layer3}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lrrrrrrrl}
+\toprule
+Contrast & Notes & Subjects & BHC/1k & DI/1k & RR & 95\% CI & \(p\) & BH q \\
+\midrule
+Diabetes & 71,318 & 29,315 & 0.657 & 0.067 & 1.275 & 1.155-1.408 & \(1.57\times10^{-6}\) & \(1.26\times10^{-5}\) \\
+SMI & 11,583 & 6,444 & 1.872 & 0.237 & 0.725 & 0.632-0.832 & \(4.88\times10^{-6}\) & \(1.95\times10^{-5}\) \\
+Obesity & 27,603 & 16,265 & 0.598 & 0.040 & 1.376 & 1.189-1.592 & \(1.83\times10^{-5}\) & \(4.87\times10^{-5}\) \\
+Sickle cell disease & 419 & 131 & 1.180 & 0.261 & 0.392 & 0.188-0.817 & 0.013 & 0.025 \\
+HIV & 4,809 & 1,785 & 1.120 & 0.097 & 1.470 & 1.053-2.053 & 0.024 & 0.038 \\
+SUD & 24,425 & 14,678 & 1.340 & 0.158 & 0.910 & 0.808-1.025 & 0.121 & 0.161 \\
+ESRD & 9,863 & 3,049 & 0.680 & 0.084 & 0.936 & 0.770-1.139 & 0.509 & 0.582 \\
+Chronic pain & 14,751 & 8,569 & 0.887 & 0.105 & 0.986 & 0.828-1.175 & 0.876 & 0.876 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\begin{table}[H]
+\caption{Scored candidates and stigmatizing-language events by anchor family and section}
+\label{tab:s_families}
+\centering
+\small
+\begin{tabular}{llrrrr}
+\toprule
+Section & Anchor family & Scored candidates & Stigma events & $P$(stigma$\mid$scored) & Share of section events \\
+\midrule
+BHC & Credibility/obstinance & 3,321 & 3,212 & 0.967 & 5.0\% \\
+BHC & Compliance & 55,300 & 41,183 & 0.745 & 64.3\% \\
+BHC & Other & 41,854 & 19,614 & 0.469 & 30.6\% \\
+HPI & Credibility/obstinance & 2,310 & 2,117 & 0.916 & 7.3\% \\
+HPI & Compliance & 20,361 & 13,803 & 0.678 & 47.3\% \\
+HPI & Other & 22,858 & 13,276 & 0.581 & 45.5\% \\
+DI & Credibility/obstinance & 145 & 136 & 0.938 & 3.8\% \\
+DI & Compliance & 5,766 & 2,156 & 0.374 & 60.5\% \\
+DI & Other & 2,702 & 1,273 & 0.471 & 35.7\% \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\item Probabilities use successfully relocated and scored candidates. The 89 relocation failures comprised 72 BHC-other, 12 HPI-other, 1 HPI-compliance, and 4 DI-other candidates and are excluded from these denominators. Event shares sometimes differ slightly from 100\% because of rounding. BHC, Brief Hospital Course; HPI, History of Present Illness; DI, Discharge Instructions.
+\end{tablenotes}
+\end{table}
+
+\begin{table}[H]
+\caption{Direct standardization of conditional stigma probabilities to a pooled anchor-family distribution}
+\label{tab:s_family_standardization}
+\centering
+\small
+\begin{tabular}{lrrrrrrr}
+\toprule
+Comparison & Crude $P_A$ & Crude $P_{DI}$ & Crude ratio & Standardized $P_A$ & Standardized $P_{DI}$ & Standardized ratio & Composition share \\
+\midrule
+BHC vs DI & 0.637 & 0.414 & 1.54 & 0.639 & 0.432 & 1.48 & $-1.3\%$ \\
+HPI vs DI & 0.641 & 0.414 & 1.55 & 0.643 & 0.445 & 1.44 & 6.0\% \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\item Standardized probabilities apply the candidate-count distribution pooled across the two sections to each section's three family-specific probabilities. Composition share is the symmetric Kitagawa composition component divided by the crude conditional-probability difference; a negative value indicates that broad-family composition slightly masked the difference. The complementary within-family shares were 101.3\% for BHC-DI and 94.0\% for HPI-DI. BHC, Brief Hospital Course; HPI, History of Present Illness; DI, Discharge Instructions.
+\end{tablenotes}
+\end{table}
+
+\begin{table}[H]
+\caption{Distribution of within-note section token shares}
+\label{tab:s_section_shares}
+\centering
+\small
+\begin{tabular}{lrrrr}
+\toprule
+Token-share metric & Notes & Mean (SD), \% & Median (IQR), \% & 5th--95th percentile, \% \\
+\midrule
+BHC share of BHC+DI & 259,207 & 63.0 (18.8) & 67.6 (51.3--77.5) & 26.1--86.7 \\
+HPI share of HPI+DI & 252,581 & 52.3 (23.3) & 58.2 (34.9--70.9) & 8.2--82.4 \\
+BHC share of BHC+HPI+DI & 252,581 & 44.0 (14.2) & 44.2 (33.9--53.9) & 20.1--67.3 \\
+HPI share of BHC+HPI+DI & 252,581 & 28.5 (14.5) & 28.3 (17.5--38.3) & 5.2--53.0 \\
+DI share of BHC+HPI+DI & 252,581 & 27.5 (17.8) & 21.2 (14.5--36.0) & 8.7--65.9 \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\item Shares were calculated within each note before summarization. BHC, Brief Hospital Course; HPI, History of Present Illness; DI, Discharge Instructions; SD, standard deviation; IQR, interquartile range.
+\end{tablenotes}
+\end{table}
+
+\begin{table}[H]
+\caption{Crude age-stratified absolute section rates and BHC-DI contrasts}
+\label{tab:s_age_rates}
+\centering
+\small
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Age, years & Notes & BHC events & BHC/1,000 (95\% CI) & DI events & DI/1,000 (95\% CI) & Crude RR (95\% CI) \\
+\midrule
+18--39 & 33,680 & 10,919 & 0.936 (0.918--0.954) & 486 & 0.068 (0.062--0.074) & 13.83 (12.63--15.15) \\
+40--64 & 103,057 & 25,560 & 0.673 (0.665--0.682) & 1,287 & 0.056 (0.053--0.060) & 11.94 (11.29--12.62) \\
+65--79 & 75,296 & 15,221 & 0.506 (0.498--0.515) & 878 & 0.052 (0.049--0.056) & 9.74 (9.10--10.42) \\
+80 or older & 47,154 & 12,306 & 0.608 (0.597--0.619) & 914 & 0.099 (0.093--0.106) & 6.14 (5.75--6.57) \\
+\bottomrule
+\end{tabular}}
+\begin{tablenotes}
+\item Rates are crude events per 1,000 section tokens in the 259,187-note complete-case cohort. Rate intervals are exact Poisson intervals; crude RR intervals use the log-event approximation. BHC, Brief Hospital Course; DI, Discharge Instructions; RR, rate ratio.
+\end{tablenotes}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\linewidth]{figure_s2_age_nonlinearity.pdf}
+\caption{Nonlinear age diagnostic for the adjusted clinician-facing BHC to patient-facing DI gap. The solid line and band show the restricted cubic spline estimate and 95\% CI relative to the fitted gap at the sample mean age of 61.8 years. The dashed line shows the primary log-linear age specification. Spline knots were 28, 56, 70, and 89 years. The joint robust Wald test for the two nonlinear interaction terms was $\chi^2_2=42.16$ ($P=6.99\times10^{-10}$). BHC, Brief Hospital Course; DI, Discharge Instructions.}
+\visiblealt{Line plot from age 18 to 91. The restricted cubic spline curve stays near 1 through middle age and then falls, reaching about 0.72 at age 80 and 0.52 at age 90 relative to age 61.8. The primary log-linear line declines steadily and differs most at younger and older ages.}
+\label{fig:s_age_nonlinearity}
+\end{figure}
+
+\end{document}

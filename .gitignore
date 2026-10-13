@@ -1,0 +1,21 @@
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.synctex(busy)
+*.run.xml
+*-blx.bib
+*.spl
+*.xdv
+main.pdf
+manuscript_supplement.pdf
+title_page.pdf
+.DS_Store
