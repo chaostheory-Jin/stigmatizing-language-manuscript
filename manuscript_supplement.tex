@@ -22,7 +22,7 @@
 \firstpage{1}
 
 \title[Supplementary material]{Supplementary Material for: From Clinician-Facing Narrative to Patient-Facing Instructions: How Stigmatizing Language Differs Across Clinical Notes}
-\abstract{Supplementary methods, complete primary binary results, sensitivity analyses, and reproducibility requirements.}
+\abstract{Supplementary methods, LLM verification of disease cohorts, complete primary binary results, sensitivity analyses, and reproducibility requirements.}
 \keywords{supplementary material}
 \maketitle
 \onecolumn
@@ -34,6 +34,13 @@
 Discharge Instructions (DI) was defined as the patient-facing section, while the remaining discharge-summary sections were classified as clinician-facing. The empirical analyses compared DI with Brief Hospital Course (BHC) as the primary clinician-facing section and History of Present Illness (HPI) as a secondary clinician-facing section. Discharge summaries were segmented at curated headers occurring at the start of a line, with adjacent headers delimiting a section body. The primary cohort required both BHC and DI, with at least 50 tokens in each. HPI was included only in its separate paired comparison. The parser scanned 331,793 notes, found 290,005 with both primary sections, and retained 259,207 after the length threshold.
 
 The group-analysis build linked every retained note to note-level subject and admission identifiers. Twenty notes had no matching HOSP patient or admission record and lacked sex and age; complete-case modeling excluded these notes. The final group-analysis cohort contained 259,187 notes, 259,187 admissions, 125,271 subjects, and 518,374 paired BHC and DI rows. Missing insurance was coded as non-Medicaid for 2,793 notes. Missing language was coded as English or LEP=0 for 398 notes. These were coding decisions rather than row exclusions.
+
+\subsection{LLM verification of ICD-coded disease cohorts}
+
+Disease cohorts were defined from ICD diagnosis codes linked to each admission. Because a diagnosis code does not guarantee that the condition is documented in the discharge summary, we assessed whether each coded condition was supported by the note text. Each admission--disease pair was adjudicated independently by five open-weight large language models (LLMs): Qwen3.5-27B, Gemma-4-31B, GLM-4-32B, Mistral-24B, and gpt-oss-20b. Each model returned one of three labels: SUPPORTED, REFUTED, or INSUFFICIENT. The adjudication covered 164,770 admission--disease pairs from 122,301 admissions across eight disease cohorts, for 823,850 model inferences. Outputs that could not be parsed were treated as missing votes rather than as a label: 568 for gpt-oss-20b (0.345\%), 67 for GLM-4-32B (0.041\%), 15 for Mistral-24B (0.009\%), 1 for Gemma-4-31B (0.001\%), and none for Qwen3.5-27B, totaling 651 (0.079\%).
+% TODO(HY): add the prompt summary, label definitions, decoding settings, and the SUPPORTED-vote threshold used to define the analytic disease cohorts.
+
+Agreement was summarized for the three labels and for a binary collapse of SUPPORTED versus REFUTED or INSUFFICIENT. Overall agreement across the five models used Fleiss \(\kappa\), Krippendorff \(\alpha\), which accommodates missing ratings, and the proportion of pairs on which all five models agreed. Pairwise agreement was calculated for each of the 10 model pairs. Results were stratified by disease and by the position of the qualifying code in the admission's diagnosis sequence: principal (sequence number 1), middle (2--9), and late (10 or higher).
 
 \subsection{Training data}
 
@@ -477,5 +484,150 @@ Age, years & Notes & BHC events & BHC/1,000 (95\% CI) & DI events & DI/1,000 (95
 \visiblealt{Line plot from age 18 to 91. The restricted cubic spline curve stays near 1 through middle age and then falls, reaching about 0.72 at age 80 and 0.52 at age 90 relative to age 61.8. The primary log-linear line declines steadily and differs most at younger and older ages.}
 \label{fig:s_age_nonlinearity}
 \end{figure}
+
+\subsection{LLM verification of disease cohorts}
+
+Votes were strongly polarized (Table~\ref{tab:s_llm_votes}). All five models labeled 124,308 admission--disease pairs (75.44\%) as SUPPORTED, and none did for 23,834 pairs (14.47\%); together these unanimous outcomes covered 89.91\% of pairs. Only 8,499 pairs (5.16\%) received two or three SUPPORTED votes, so the choice of vote threshold affects a small share of the cohort. All five models assigned the same three-class label to 146,100 pairs (88.67\%).
+
+Overall agreement was almost perfect by Landis and Koch benchmarks (Table~\ref{tab:s_llm_overall}): Fleiss \(\kappa\) was 0.816 for three classes and 0.838 for the binary outcome, and Krippendorff \(\alpha\) was 0.817 and 0.839. Because \(\alpha\) accommodates missing ratings and differed from \(\kappa\) by less than 0.001, the 651 unparsed outputs did not materially affect agreement. Binary pairwise \(\kappa\) ranged from 0.770 to 0.913, with a median of 0.841, and all 10 pairs exceeded 0.60 (Table~\ref{tab:s_llm_pairwise}).
+
+Models differed in how readily they assigned SUPPORTED (Table~\ref{tab:s_llm_models}). GLM-4-32B was the most permissive (83.89\%) and had the lowest mean pairwise \(\kappa\) (0.814); Qwen3.5-27B was the most conservative (77.97\%), a difference of 5.9 percentage points. REFUTED was rarely assigned by any model (0.13\%--1.68\%). The procedure therefore separates notes that document a coded condition from notes that do not provide evidence for it; it should not be used to conclude that a patient does not have the condition.
+
+Support rates varied by disease (Table~\ref{tab:s_llm_disease}). The share of pairs with at least three SUPPORTED votes ranged from 58.2\% for chronic pain to 96.5\% for HIV. Agreement and support rates were not aligned. HIV had the highest support rate but the lowest \(\kappa\) (0.614), because when nearly all labels are SUPPORTED, expected chance agreement is high and \(\kappa\) is reduced. Obesity had a lower support rate (68.1\%) but the highest \(\kappa\) (0.895), indicating that the models agreed on which obesity codes lacked documentary support. A low \(\kappa\) should therefore be read alongside the support rate rather than as evidence of unreliable adjudication.
+
+Support declined with the position of the qualifying code in the diagnosis sequence (Table~\ref{tab:s_llm_icd}). At least three models supported 94.1\% of principal-diagnosis pairs, 83.9\% of middle-position pairs, and 72.0\% of late-position pairs, and the share with no SUPPORTED votes rose from 2.4\% to 11.8\% and 22.2\%. Principal diagnoses accounted for only 5.7\% of adjudicated pairs, so most disease-cohort membership rested on secondary codes.
+
+\begin{table}[H]
+\caption{Distribution of SUPPORTED votes across five LLMs per admission--disease pair}
+\label{tab:s_llm_votes}
+\centering
+\small
+\begin{tabular}{lrrr}
+\toprule
+SUPPORTED votes & Pairs & Share (\%) & Cumulative (\%) \\
+\midrule
+0/5 & 23,834 & 14.47 & 14.47 \\
+1/5 & 3,717 & 2.26 & 16.72 \\
+2/5 & 4,034 & 2.45 & 19.17 \\
+3/5 & 4,465 & 2.71 & 21.88 \\
+4/5 & 4,412 & 2.68 & 24.56 \\
+5/5 & 124,308 & 75.44 & 100.00 \\
+\midrule
+Total & 164,770 & 100.00 & \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\item The adjudication covered 164,770 admission--disease pairs from 122,301 admissions and eight disease cohorts, with 823,850 model inferences. Unparsed outputs (651) were treated as missing votes. LLM, large language model.
+\end{tablenotes}
+\end{table}
+
+\begin{table}[H]
+\caption{Overall agreement among five LLMs}
+\label{tab:s_llm_overall}
+\centering
+\small
+\begin{tabular}{lrr}
+\toprule
+Metric & Three classes & Binary \\
+\midrule
+Fleiss \(\kappa\) & 0.8159 & 0.8383 \\
+Krippendorff \(\alpha\) & 0.8167 & 0.8391 \\
+Complete agreement (\%) & 88.67 & 89.91 \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\item Three classes are SUPPORTED, REFUTED, and INSUFFICIENT. The binary outcome is SUPPORTED versus REFUTED or INSUFFICIENT. Complete agreement is the share of pairs on which all five models assigned the same label.
+\end{tablenotes}
+\end{table}
+
+\begin{table}[H]
+\caption{Pairwise agreement between LLMs}
+\label{tab:s_llm_pairwise}
+\centering
+\small
+\begin{tabular}{llrrrr}
+\toprule
+Model A & Model B & 3-class agr. (\%) & 3-class \(\kappa\) & Binary agr. (\%) & Binary \(\kappa\) \\
+\midrule
+Qwen3.5-27B & Gemma-4-31B & 96.3 & 0.894 & 97.0 & 0.913 \\
+GLM-4-32B & Mistral-24B & 95.4 & 0.836 & 96.6 & 0.876 \\
+gpt-oss-20b & Gemma-4-31B & 95.0 & 0.848 & 95.8 & 0.871 \\
+Qwen3.5-27B & gpt-oss-20b & 95.3 & 0.858 & 95.6 & 0.867 \\
+Mistral-24B & gpt-oss-20b & 95.4 & 0.846 & 95.6 & 0.852 \\
+Qwen3.5-27B & Mistral-24B & 94.2 & 0.818 & 94.6 & 0.830 \\
+GLM-4-32B & gpt-oss-20b & 93.9 & 0.792 & 95.0 & 0.828 \\
+Mistral-24B & Gemma-4-31B & 93.0 & 0.779 & 93.8 & 0.804 \\
+Qwen3.5-27B & GLM-4-32B & 92.1 & 0.749 & 93.2 & 0.781 \\
+GLM-4-32B & Gemma-4-31B & 92.1 & 0.748 & 92.9 & 0.770 \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\item Rows are ordered by binary \(\kappa\). Agr., observed agreement.
+\end{tablenotes}
+\end{table}
+
+\begin{table}[H]
+\caption{Label distribution by LLM}
+\label{tab:s_llm_models}
+\centering
+\small
+\begin{tabular}{lrrrr}
+\toprule
+Model & SUPPORTED (\%) & REFUTED (\%) & INSUFFICIENT (\%) & Mean pairwise \(\kappa\) \\
+\midrule
+GLM-4-32B & 83.89 & 1.68 & 14.38 & 0.814 \\
+Mistral-24B & 82.65 & 0.29 & 17.05 & 0.841 \\
+gpt-oss-20b & 80.46 & 0.13 & 19.06 & 0.855 \\
+Gemma-4-31B & 78.23 & 1.08 & 20.69 & 0.839 \\
+Qwen3.5-27B & 77.97 & 0.53 & 21.50 & 0.847 \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\item Percentages use all 164,770 pairs as the denominator; rows do not sum to 100\% where outputs could not be parsed. Mean pairwise \(\kappa\) averages the binary \(\kappa\) of each model with the other four.
+\end{tablenotes}
+\end{table}
+
+\begin{table}[H]
+\caption{LLM agreement and support by disease cohort}
+\label{tab:s_llm_disease}
+\centering
+\small
+\begin{tabular}{lrrrrrrr}
+\toprule
+Disease cohort & Pairs & Fleiss \(\kappa\) & Complete agr. (\%) & 5/5 (\%) & \(\geq\)3/5 (\%) & \(\geq\)1/5 (\%) & 0/5 (\%) \\
+\midrule
+HIV & 4,809 & 0.614 & 95.0 & 93.9 & 96.5 & 98.9 & 1.1 \\
+Sickle cell disease & 419 & 0.860 & 93.1 & 90.0 & 93.1 & 94.3 & 5.7 \\
+Diabetes & 71,317 & 0.744 & 93.3 & 89.6 & 92.8 & 95.9 & 4.1 \\
+End-stage renal disease & 9,863 & 0.702 & 85.6 & 84.8 & 91.0 & 95.4 & 4.6 \\
+Serious mental illness & 11,583 & 0.815 & 83.6 & 75.0 & 79.4 & 86.8 & 13.2 \\
+Obesity & 27,603 & 0.895 & 89.3 & 61.0 & 68.1 & 71.1 & 28.9 \\
+Substance use disorder & 24,425 & 0.805 & 80.7 & 57.6 & 67.4 & 74.9 & 25.1 \\
+Chronic pain & 14,751 & 0.840 & 82.1 & 51.3 & 58.2 & 67.8 & 32.2 \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\item Fleiss \(\kappa\) and complete agreement use the three labels. Vote columns give the share of pairs with the stated number of SUPPORTED votes out of five. Agr., agreement.
+\end{tablenotes}
+\end{table}
+
+\begin{table}[H]
+\caption{LLM agreement and support by position of the qualifying ICD code}
+\label{tab:s_llm_icd}
+\centering
+\small
+\begin{tabular}{lrrrrrr}
+\toprule
+Code position & Pairs & Share (\%) & Fleiss \(\kappa\) & 5/5 (\%) & \(\geq\)3/5 (\%) & 0/5 (\%) \\
+\midrule
+Principal (sequence 1) & 9,380 & 5.7 & 0.644 & 89.8 & 94.1 & 2.4 \\
+Middle (sequence 2--9) & 105,152 & 63.8 & 0.828 & 78.8 & 83.9 & 11.8 \\
+Late (sequence \(\geq\)10) & 50,238 & 30.5 & 0.853 & 65.7 & 72.0 & 22.2 \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\item Position is the sequence number of the qualifying diagnosis code within the admission. Vote columns give the share of pairs with the stated number of SUPPORTED votes out of five.
+\end{tablenotes}
+\end{table}
 
 \end{document}
