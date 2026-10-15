@@ -65,9 +65,15 @@ We therefore compared stigmatizing language in patient-facing DI and clinician-f
 \section{Materials and Methods}
 
 \subsection{Overall Pipeline}
-Figure xxx shows the overall pipeline of our methods. 
-classifier, input/output
-icd code (LLM)
+Figure~\ref{fig:framework} shows the study framework. Stigmatizing language was identified with one binary classifier applied to every section (Panel A). Each candidate began with a keyword from an 89-term lexicon and was scored in a window containing the keyword sentence and one adjacent sentence on either side by a fine-tuned GatorTron-base model. Classified events were counted for each note and section, with clinician-facing BHC and patient-facing DI drawn from the same discharge summary (Panel B). ICD-coded disease cohorts were checked separately against the clinical record. Five open-weight large language models (LLMs) judged whether each admission--disease pair was supported by the past medical history, diagnoses, results, examination, and medications. BHC and DI were withheld from this step so that disease verification did not draw on the text in which stigmatizing language was measured, and the ICD code text was not shown to the models. These inputs entered two models (Panel C). The section model compared stigmatizing-language rates between BHC and DI. The disparity model tested whether the BHC-DI gap differed by patient group, with LLM-verified disease status as the disease exposure.
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{figure1_framework.png}
+\caption{Study framework. (A) Keyword candidates from an 89-term lexicon are scored in sentence-window context by a binary GatorTron-base classifier (test macro-F1, 0.93); the same model scores every section. (B) Classified events are counted for each note and section in clinician-facing BHC and patient-facing DI. ICD-coded disease cohorts are verified by five open-weight LLMs that read history, diagnosis, results, examination, and medication text, with BHC, DI, and the code text withheld. (C) Model 1 estimates the BHC-DI rate ratio with a Poisson GEE clustered by note. Model 2 tests whether that ratio differs by patient group, using LLM-verified disease status and adjusting for race and ethnicity, sex, insurance, limited English proficiency, age, and severity, with clustering by patient. BHC, Brief Hospital Course; DI, Discharge Instructions; GEE, generalized estimating equation; ICD, International Classification of Diseases; LLM, large language model.}
+\visiblealt{Three-panel schematic. Panel A traces a keyword through its sentence context to a GatorTron-base classifier with stigma and non-stigma outputs. Panel B shows example BHC and DI text from one discharge summary, and below it an ICD code passing through a vote by five LLMs to a supported or insufficient label. Panel C shows the section model, with a much taller BHC bar than DI bar, and the disparity model, with interaction estimates for obesity, diabetes, HIV, serious mental illness, and sickle cell disease.}
+\label{fig:framework}
+\end{figure*}
 
 
 \subsection{Data source}
