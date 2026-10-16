@@ -31,14 +31,14 @@
 
 \subsection{Section parsing and cohort construction}
 
-Discharge Instructions (DI) was defined as the patient-facing section, while the remaining discharge-summary sections were classified as clinician-facing. The empirical analyses compared DI with Brief Hospital Course (BHC) as the primary clinician-facing section and History of Present Illness (HPI) as a secondary clinician-facing section. Discharge summaries were segmented at curated headers occurring at the start of a line, with adjacent headers delimiting a section body. The primary cohort required both BHC and DI, with at least 50 tokens in each. HPI was included only in its separate paired comparison. The parser scanned 331,793 notes, found 290,005 with both primary sections, and retained 259,207 after the length threshold. Header rules, token definition, and the full cohort flow are given in the Supplementary Note (Section~\ref{sec:s_processing}).
+Discharge Instructions (DI) was defined as the patient-facing section, while the remaining discharge-summary sections were classified as clinician-facing. The empirical analyses compared DI with Brief Hospital Course (BHC) as the primary clinician-facing section and History of Present Illness (HPI) as a secondary clinician-facing section. Discharge summaries were segmented at curated headers occurring at the start of a line, with adjacent headers delimiting a section body. The primary cohort required both BHC and DI, with at least 50 words in each. HPI was included only in its separate paired comparison. The parser scanned 331,793 notes, found 290,005 with both primary sections, and retained 259,207 after the length threshold. Header rules, the definition of a word, and the full cohort flow are given in the Supplementary Note (Section~\ref{sec:s_processing}).
 
 The group-analysis build linked every retained note to note-level subject and admission identifiers. Twenty notes had no matching patient or admission record because their admissions, present in MIMIC-IV version 2.2, have been removed from version 3.1; they lacked sex and age, and complete-case modeling excluded them. The final group-analysis cohort contained 259,187 notes, 259,187 admissions, 125,271 subjects, and 518,374 paired BHC and DI rows. Missing insurance was coded as non-Medicaid for 2,793 notes. Missing language was coded as English or LEP=0 for 398 notes. These were coding decisions rather than row exclusions.
 
 \subsection{LLM verification of ICD-coded disease cohorts}
 
 Disease cohorts were defined from ICD diagnosis codes linked to each admission. Because a diagnosis code does not guarantee that the condition is documented in the discharge summary, we assessed whether each coded condition was supported by the note text. Each admission--disease pair was adjudicated independently by five open-weight large language models (LLMs): Qwen3.5-27B, Gemma-4-31B, GLM-4-32B, Mistral-24B, and gpt-oss-20b. Each model read seven sections of the discharge summary, with BHC, DI, HPI, Social History, and the ICD codes withheld (Supplementary Note), and returned one of three labels: SUPPORTED, REFUTED, or INSUFFICIENT. The adjudication covered 164,770 admission--disease pairs from 122,301 admissions across eight disease cohorts, for 823,850 model inferences. Outputs that could not be parsed were treated as missing votes rather than as a label: 568 for gpt-oss-20b (0.345\%), 67 for GLM-4-32B (0.041\%), 15 for Mistral-24B (0.009\%), 1 for Gemma-4-31B (0.001\%), and none for Qwen3.5-27B, totaling 651 (0.079\%).
-% TODO(HY): add the prompt summary, label definitions, decoding settings, and the SUPPORTED-vote threshold used to define the analytic disease cohorts.
+% TODO(HY): add the prompt summary, label definitions, and decoding settings. Primary disease cohorts require 5/5 SUPPORTED votes; Table S11 (Layer 3) still reports ICD-coded cohorts and should be switched to the 5/5 cohorts.
 
 Agreement was summarized for the three labels and for a binary collapse of SUPPORTED versus REFUTED or INSUFFICIENT. Overall agreement across the five models used Fleiss \(\kappa\), Krippendorff \(\alpha\), which accommodates missing ratings, and the proportion of pairs on which all five models agreed. Pairwise agreement was calculated for each of the 10 model pairs. Results were stratified by disease and by the position of the qualifying code in the admission's diagnosis sequence: principal (sequence number 1), middle (2--9), and late (10 or higher). To assess how verification affected disease modification, we refitted the Layer 3 model with disease cohorts restricted to admission--disease pairs with at least three, or all five, SUPPORTED votes and compared the resulting interaction RRs with those from the unverified ICD-coded cohorts.
 
@@ -54,19 +54,19 @@ In the analysis corpus, the 89-keyword lexicon identified Credibility \& Obstina
 
 For the anchor-family analysis, we streamed the saved binary output and aggregated successfully relocated candidates and stigmatizing-language events by section and the three prespecified broad families. Conditional probabilities use scored candidates as the denominator; the 89 relocation failures were retained in a separate audit. Wilson intervals describe each family-specific probability. For BHC-DI and HPI-DI, direct standardization applied the candidate-count distribution pooled across the two compared sections to both sets of family-specific probabilities. We also used the symmetric Kitagawa two-component identity to partition the crude conditional-probability difference into broad-family composition and within-family components. These descriptive components are not causal and do not standardize the exact terms within each family.
 
-For composition, we calculated each section's share of the relevant section-token total within every note. We summarized BHC among BHC plus DI, HPI among HPI plus DI, and each of BHC, HPI, and DI among notes containing all three sections.
+For composition, we calculated each section's share of the relevant section word total within every note. We summarized BHC among BHC plus DI, HPI among HPI plus DI, and each of BHC, HPI, and DI among notes containing all three sections.
 
 A note-level rate obeys the identity
 \[
 R_{note}=\sum_s w_sR_s, \qquad w_s=\frac{T_s}{\sum_j T_j},
 \]
-where $R_s$ is the stigmatizing-language rate and $T_s$ the token count in section $s$. Section composition therefore enters every note-level rate that ignores sections through the token weights $w_s$: with the section-specific rates $R_s$ held fixed, the note-level rate still changes when the token shares $w_s$ change.
+where $R_s$ is the stigmatizing-language rate and $T_s$ the word count in section $s$. Section composition therefore enters every note-level rate that ignores sections through the word weights $w_s$: with the section-specific rates $R_s$ held fixed, the note-level rate still changes when the word shares $w_s$ change.
 
 \subsection{Section and group-modification models}
 
-The section comparison used a Poisson generalized estimating equation (GEE), log-token offset, exchangeable working correlation, note-level clustering, and robust sandwich standard errors. DI was the reference. Paired Wilcoxon tests provided a directional check. GEE targets a population-average rate ratio. The token offset fixes the coefficient on the log token count at 1, so expected event counts are compared at a common amount of text. Robust standard errors keep inference valid if the exchangeable working correlation is misspecified, although they do not correct outcome misclassification by the language model.
+The section comparison used a Poisson generalized estimating equation (GEE), log word-count offset, exchangeable working correlation, note-level clustering, and robust sandwich standard errors. DI was the reference. Paired Wilcoxon tests provided a directional check. GEE targets a population-average rate ratio. The word-count offset fixes the coefficient on the log word count at 1, so expected event counts are compared at a common amount of text. Robust standard errors keep inference valid if the exchangeable working correlation is misspecified, although they do not correct outcome misclassification by the language model.
 
-All group-modification models used a Poisson log link, offset \(\log(n\_tokens)\), subject-level clustering, exchangeable working correlation, Pearson \(X^2\) scale, robust covariance, and at most 100 iterations. The target term was the section by group interaction. An interaction RR greater than 1 indicates a wider BHC to DI rate ratio than the reference.
+All group-modification models used a Poisson log link, offset \(\log(\text{word count})\), subject-level clustering, exchangeable working correlation, Pearson \(X^2\) scale, robust covariance, and at most 100 iterations. The target term was the section by group interaction. An interaction RR greater than 1 indicates a wider BHC to DI rate ratio than the reference.
 
 Layer 1 used:
 \[
@@ -80,7 +80,7 @@ The nine identity interactions formed one BH-FDR family. Layer 2 refitted identi
 
 Layer 3 jointly interacted section with all eight disease indicators and with identity and severity covariates. Its eight disease interactions formed one BH-FDR family.
 
-Age diagnostics used the 259,187-note complete-case group-analysis cohort. Crude age-stratified absolute rates used bands of 18--39, 40--64, 65--79, and 80 years or older, exact Poisson intervals for each rate, and log-scale intervals for crude BHC-DI RRs. The nonlinear diagnostic retained the primary Poisson GEE structure, covariates, subject clustering, log-token offset, exchangeable working correlation, Pearson scale, and robust covariance. Age was represented by a restricted cubic spline with knots at 28, 56, 70, and 89 years, corresponding to the 5th, 35th, 65th, and 95th percentiles. A joint robust Wald test evaluated the two section-by-nonlinear-basis terms. Delta-method intervals accompany the BHC-DI gap at each age relative to the fitted gap at the sample mean age of 61.8 years.
+Age diagnostics used the 259,187-note complete-case group-analysis cohort. Crude age-stratified absolute rates used bands of 18--39, 40--64, 65--79, and 80 years or older, exact Poisson intervals for each rate, and log-scale intervals for crude BHC-DI RRs. The nonlinear diagnostic retained the primary Poisson GEE structure, covariates, subject clustering, log word-count offset, exchangeable working correlation, Pearson scale, and robust covariance. Age was represented by a restricted cubic spline with knots at 28, 56, 70, and 89 years, corresponding to the 5th, 35th, 65th, and 95th percentiles. A joint robust Wald test evaluated the two section-by-nonlinear-basis terms. Delta-method intervals accompany the BHC-DI gap at each age relative to the fitted gap at the sample mean age of 61.8 years.
 
 \subsection{Sensitivity analyses}
 
@@ -151,7 +151,7 @@ nlpie/tiny-clinicalbert & 0.9168 & 0.9281 & 0.8989 & 0.9089 \\
 \label{tab:s_sections}
 \begin{tabular}{lrrrr}
 \toprule
-Section & Notes & Stigmatizing-language events & Tokens & Events per 1,000 tokens \\
+Section & Notes & Stigmatizing-language events & Words & Events per 1,000 words \\
 \midrule
 Brief Hospital Course & 259,207 & 64,009 & 99,943,863 & 0.640 \\
 Discharge Instructions & 259,207 & 3,565 & 56,123,304 & 0.064 \\
@@ -442,13 +442,13 @@ HPI vs DI & 0.641 & 0.414 & 1.55 & 0.643 & 0.445 & 1.44 & 6.0\% \\
 \end{table}
 
 \begin{table}[H]
-\caption{Distribution of within-note section token shares}
+\caption{Distribution of within-note section word shares}
 \label{tab:s_section_shares}
 \centering
 \small
 \begin{tabular}{lrrrr}
 \toprule
-Token-share metric & Notes & Mean (SD), \% & Median (IQR), \% & 5th--95th percentile, \% \\
+Word-share metric & Notes & Mean (SD), \% & Median (IQR), \% & 5th--95th percentile, \% \\
 \midrule
 BHC share of BHC+DI & 259,207 & 63.0 (18.8) & 67.6 (51.3--77.5) & 26.1--86.7 \\
 HPI share of HPI+DI & 252,581 & 52.3 (23.3) & 58.2 (34.9--70.9) & 8.2--82.4 \\
@@ -479,7 +479,7 @@ Age, years & Notes & BHC events & BHC/1,000 (95\% CI) & DI events & DI/1,000 (95
 \bottomrule
 \end{tabular}}
 \begin{tablenotes}
-\item Rates are crude events per 1,000 section tokens in the 259,187-note complete-case cohort. Rate intervals are exact Poisson intervals; crude RR intervals use the log-event approximation. BHC, Brief Hospital Course; DI, Discharge Instructions; RR, rate ratio.
+\item Rates are crude events per 1,000 section words in the 259,187-note complete-case cohort. Rate intervals are exact Poisson intervals; crude RR intervals use the log-event approximation. BHC, Brief Hospital Course; DI, Discharge Instructions; RR, rate ratio.
 \end{tablenotes}
 \end{table}
 
@@ -658,7 +658,7 @@ Obesity & 1.376 (1.19-1.59)*** & 1.347 (1.13-1.61)** & 1.329 (1.11-1.60)** \\
 \bottomrule
 \end{tabular}
 \begin{tablenotes}
-\item Values are covariate-adjusted interaction RRs (95\% CI) comparing the BHC-DI rate ratio for notes with versus without each condition. The ICD-coded column reproduces the primary Layer 3 estimates (Table~\ref{tab:s_layer3}). Verified columns restrict each disease cohort to admission--disease pairs with the stated number of SUPPORTED votes from five LLMs. Asterisks mark Benjamini-Hochberg \(q<0.05\) (*), \(q<0.01\) (**), and \(q<0.001\) (***); unmarked estimates did not meet \(q<0.05\). BHC, Brief Hospital Course; DI, Discharge Instructions; LLM, large language model.
+\item Values are covariate-adjusted interaction RRs (95\% CI) comparing the BHC-DI rate ratio for notes with versus without each condition. The ICD-coded column reproduces the Layer 3 estimates in Table~\ref{tab:s_layer3}; the 5/5 column corresponds to the primary disease definition. Verified columns restrict each disease cohort to admission--disease pairs with the stated number of SUPPORTED votes from five LLMs. Asterisks mark Benjamini-Hochberg \(q<0.05\) (*), \(q<0.01\) (**), and \(q<0.001\) (***); unmarked estimates did not meet \(q<0.05\). BHC, Brief Hospital Course; DI, Discharge Instructions; LLM, large language model.
 \end{tablenotes}
 \end{table}
 % TODO(HY): add 95% CIs for chronic pain and end-stage renal disease in the two verified columns.
@@ -675,9 +675,9 @@ The stigmatizing-language resource of Harrigian and colleagues (version 1.0.0) s
 
 \subsection{Section segmentation and cohort construction}
 
-Each discharge summary was divided into sections using regular expressions for 25 fixed section headers. A header was recognized only at the start of a line and when followed by a colon; matching ignored case, and longer headers were matched before shorter ones. Subheadings within the physical examination, such as HEENT, were deliberately not treated as section boundaries. When a header occurred more than once in a note, only the first occurrence was kept. A token was defined as a maximal run of word characters (letters, digits, or underscore), and section length was the number of such tokens.
+Each discharge summary was divided into sections using regular expressions for 25 fixed section headers. A header was recognized only at the start of a line and when followed by a colon; matching ignored case, and longer headers were matched before shorter ones. Subheadings within the physical examination, such as HEENT, were deliberately not treated as section boundaries. When a header occurred more than once in a note, only the first occurrence was kept. Words were counted as maximal runs of word characters (letters, digits, or underscore), and section length was the number of such words.
 
-A note entered the section-analysis cohort if it contained both a BHC and a DI section with at least 50 tokens each (Table~\ref{tab:s_flow}). The Follow-up Instructions section is replaced by an empty string during deidentification in MIMIC-IV-Note and was therefore excluded. The Social History section averaged about three tokens per note and was not used in the primary models.
+A note entered the section-analysis cohort if it contained both a BHC and a DI section with at least 50 words each (Table~\ref{tab:s_flow}). The Follow-up Instructions section is replaced by an empty string during deidentification in MIMIC-IV-Note and was therefore excluded. The Social History section averaged about three words per note and was not used in the primary models.
 
 \begin{table}[H]
 \caption{Construction of the analysis cohorts}
@@ -691,7 +691,7 @@ Step & Notes \\
 Discharge summaries scanned & 331,793 \\
 \quad Excluded: BHC or DI section absent & 41,788 \\
 Notes with both BHC and DI & 290,005 \\
-\quad Excluded: BHC or DI shorter than 50 tokens & 30,798 \\
+\quad Excluded: BHC or DI shorter than 50 words & 30,798 \\
 Section-analysis cohort & 259,207 \\
 \quad Excluded: no linked patient or admission record & 20 \\
 Group-analysis cohort (complete cases) & 259,187 \\
@@ -706,7 +706,7 @@ Group-analysis cohort (complete cases) & 259,187 \\
 
 The 89 lexicon terms fall into the three non-overlapping families defined by Harrigian and colleagues: Credibility \& Obstinacy (13 terms), Compliance (26 terms), and Descriptors (50 terms). Keyword matching ignored case and required that the match not be preceded or followed by a letter, digit, or underscore. A space within a multiword term could match either a space or a hyphen, so that drug seeking also matched drug-seeking, and longer terms were matched before shorter ones. Because a hyphen counts as a boundary under this rule, non-compliance was matched as the term compliance rather than as noncompliance; whether such a match was stigmatizing was left to the classifier.
 
-For scoring, each candidate was represented by the sentence containing the keyword and one sentence on either side, taken from the original section text. Sentence boundaries were a period, question mark, or exclamation mark followed by whitespace. The window was then cleaned and normalized with the procedures released with the annotation resource, and the keyword was located again in the normalized text. When the keyword occurred more than once in the window, the occurrence nearest the window midpoint was marked. Inputs longer than 256 tokens were truncated, and each candidate received the label with the higher predicted score. Candidates whose keyword could not be found after normalization were excluded from event counts (Table~\ref{tab:s_candidates}). When the same keyword occurred twice within one three-sentence window, both candidates were marked at the same occurrence, so one of the two was anchored to the wrong position.
+For scoring, each candidate was represented by the sentence containing the keyword and one sentence on either side, taken from the original section text. Sentence boundaries were a period, question mark, or exclamation mark followed by whitespace. The window was then cleaned and normalized with the procedures released with the annotation resource, and the keyword was located again in the normalized text. When the keyword occurred more than once in the window, the occurrence nearest the window midpoint was marked. Inputs longer than 256 model tokens were truncated, and each candidate received the label with the higher predicted score. Candidates whose keyword could not be found after normalization were excluded from event counts (Table~\ref{tab:s_candidates}). When the same keyword occurred twice within one three-sentence window, both candidates were marked at the same occurrence, so one of the two was anchored to the wrong position.
 
 \begin{table}[H]
 \caption{Keyword candidates, relocation failures, and scored candidates by section}
@@ -748,7 +748,7 @@ Medicaid status was 1 when the recorded insurance was Medicaid and 0 for Medicar
 Race and ethnicity were assigned from the recorded category by checking, in order, for Black, Hispanic or Latino, Asian, White, and American Indian or Alaska Native or Native Hawaiian or Pacific Islander; all remaining values were coded as Unknown. The Unknown group (19,075 admissions) comprised Other (8,709), Unknown (6,816), Patient Declined (1,082), Portuguese (989), Unable to Obtain (922), South American (302), and Multiple Race (255). The Other group (714 admissions) comprised American Indian or Alaska Native (503) and Native Hawaiian or Pacific Islander (211).
 % TODO(HY): v2 re-run (pending approval) follows OMB 1997: South American -> Hispanic or Latino (+302), Portuguese -> White (+989), Unknown 19,075 -> 17,784. Update this paragraph if v2 becomes the reported analysis.
 
-For modeling, BHC was coded 1 and DI 0, and the offset was the log of the section token count with a floor of one token. The complete-case step on race and ethnicity, sex, Medicaid status, limited English proficiency, age, and token count removed 57 rows from 20 notes, all of them the unlinked notes above. The final group-analysis dataset contained 259,187 notes (one per admission) from 125,271 patients, with 518,374 BHC and DI rows, of which 481,383 had zero events, and 770,938 rows across all three sections.
+For modeling, BHC was coded 1 and DI 0, and the offset was the log of the section word count with a floor of one word. The complete-case step on race and ethnicity, sex, Medicaid status, limited English proficiency, age, and word count removed 57 rows from 20 notes, all of them the unlinked notes above. The final group-analysis dataset contained 259,187 notes (one per admission) from 125,271 patients, with 518,374 BHC and DI rows, of which 481,383 had zero events, and 770,938 rows across all three sections.
 
 \subsection{Disease cohort definitions}
 
@@ -821,6 +821,6 @@ AIDS/HIV & 6 & 042--044 & B20--B22, B24 \\
 
 \subsection{Input to LLM verification}
 
-Every admission--disease pair that was positive under the code lists above was submitted for verification, for 164,770 pairs. The models received text from seven sections of the discharge summary; BHC, DI, HPI, and Social History were withheld, so that verification did not draw on the sections in which stigmatizing language was measured. The seven sections were concatenated and truncated to 6,000 characters, and the ICD codes themselves were not shown to the models. The primary models reported in the main text use the unverified code-based indicators; Table~\ref{tab:s_llm_layer3} compares them with LLM-verified cohorts.
+Every admission--disease pair that was positive under the code lists above was submitted for verification, for 164,770 pairs. The models received text from seven sections of the discharge summary; BHC, DI, HPI, and Social History were withheld, so that verification did not draw on the sections in which stigmatizing language was measured. The seven sections were concatenated and truncated to 6,000 characters, and the ICD codes themselves were not shown to the models. The primary disparity models in the main text use cohorts confirmed by all five models; Table~\ref{tab:s_llm_layer3} compares them with the unverified code-based cohorts and with a three-vote threshold.
 
 \end{document}
