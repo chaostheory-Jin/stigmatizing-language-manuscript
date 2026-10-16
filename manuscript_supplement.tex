@@ -56,9 +56,15 @@ For the anchor-family analysis, we streamed the saved binary output and aggregat
 
 For composition, we calculated each section's share of the relevant section-token total within every note. We summarized BHC among BHC plus DI, HPI among HPI plus DI, and each of BHC, HPI, and DI among notes containing all three sections.
 
+A note-level rate obeys the identity
+\[
+R_{note}=\sum_s w_sR_s, \qquad w_s=\frac{T_s}{\sum_j T_j},
+\]
+where $R_s$ is the stigmatizing-language rate and $T_s$ the token count in section $s$. Section composition therefore enters every note-level rate that ignores sections through the token weights $w_s$: with the section-specific rates $R_s$ held fixed, the note-level rate still changes when the token shares $w_s$ change.
+
 \subsection{Section and group-modification models}
 
-The section comparison used a Poisson generalized estimating equation (GEE), log-token offset, exchangeable working correlation, note-level clustering, and robust sandwich standard errors. DI was the reference. Paired Wilcoxon tests provided a directional check.
+The section comparison used a Poisson generalized estimating equation (GEE), log-token offset, exchangeable working correlation, note-level clustering, and robust sandwich standard errors. DI was the reference. Paired Wilcoxon tests provided a directional check. GEE targets a population-average rate ratio. The token offset fixes the coefficient on the log token count at 1, so expected event counts are compared at a common amount of text. Robust standard errors keep inference valid if the exchangeable working correlation is misspecified, although they do not correct outcome misclassification by the language model.
 
 All group-modification models used a Poisson log link, offset \(\log(n\_tokens)\), subject-level clustering, exchangeable working correlation, Pearson \(X^2\) scale, robust covariance, and at most 100 iterations. The target term was the section by group interaction. An interaction RR greater than 1 indicates a wider BHC to DI rate ratio than the reference.
 
