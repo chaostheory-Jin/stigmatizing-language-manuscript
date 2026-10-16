@@ -37,10 +37,10 @@ The group-analysis build linked every retained note to note-level subject and ad
 
 \subsection{LLM verification of ICD-coded disease cohorts}
 
-Disease cohorts were defined from ICD diagnosis codes linked to each admission. Because a diagnosis code does not guarantee that the condition is documented in the discharge summary, we assessed whether each coded condition was supported by the note text. Each admission--disease pair was adjudicated independently by five open-weight large language models (LLMs): Qwen3.5-27B, Gemma-4-31B, GLM-4-32B, Mistral-24B, and gpt-oss-20b. Each model read seven sections of the discharge summary, with BHC, DI, HPI, Social History, and the ICD codes withheld (Supplementary Note), and returned one of three labels: SUPPORTED, REFUTED, or INSUFFICIENT. The adjudication covered 164,770 admission--disease pairs from 122,301 admissions across eight disease cohorts, for 823,850 model inferences. Outputs that could not be parsed were treated as missing votes rather than as a label: 568 for gpt-oss-20b (0.345\%), 67 for GLM-4-32B (0.041\%), 15 for Mistral-24B (0.009\%), 1 for Gemma-4-31B (0.001\%), and none for Qwen3.5-27B, totaling 651 (0.079\%).
-% TODO(HY): add the prompt summary, label definitions, and decoding settings. Primary disease cohorts require 5/5 SUPPORTED votes; Table S11 (Layer 3) still reports ICD-coded cohorts and should be switched to the 5/5 cohorts.
+Disease cohorts were defined from ICD diagnosis codes linked to each admission. Because a diagnosis code does not guarantee that the condition is documented in the discharge summary, we assessed whether each coded condition was supported by the note text. Each admission--disease pair was adjudicated independently by five open-weight large language models (LLMs): Qwen3.5-27B, Gemma-4-31B, GLM-4-32B, Mistral-24B, and gpt-oss-20b. Each model read seven sections of the discharge summary, with BHC, DI, HPI, Social History, and the ICD codes withheld (Supplementary Note), and returned one of three labels: SUPPORTED, REFUTED, or INSUFFICIENT. The adjudication covered 164,770 admission--disease pairs from 122,301 admissions across eight disease cohorts, for 823,850 model inferences. Outputs that could not be parsed were treated as missing votes rather than as a label: 568 for gpt-oss-20b (0.345\%), 67 for GLM-4-32B (0.041\%), 15 for Mistral-24B (0.009\%), 1 for Gemma-4-31B (0.001\%), and none for Qwen3.5-27B, totaling 651 (0.079\%). Qwen3.5-27B returned duplicate rows for some pairs; these were collapsed to the first occurrence, and only two duplicates disagreed.
+% TODO(HY): add the prompt summary, label definitions, and decoding settings. Table S11 reports the ICD-coded Layer 3 model; switch it to the 5/5 cohorts when subject counts and p-values are available, or keep it as the ICD-coded comparison.
 
-Agreement was summarized for the three labels and for a binary collapse of SUPPORTED versus REFUTED or INSUFFICIENT. Overall agreement across the five models used Fleiss \(\kappa\), Krippendorff \(\alpha\), which accommodates missing ratings, and the proportion of pairs on which all five models agreed. Pairwise agreement was calculated for each of the 10 model pairs. Results were stratified by disease and by the position of the qualifying code in the admission's diagnosis sequence: principal (sequence number 1), middle (2--9), and late (10 or higher). To assess how verification affected disease modification, we refitted the Layer 3 model with disease cohorts restricted to admission--disease pairs with at least three, or all five, SUPPORTED votes and compared the resulting interaction RRs with those from the unverified ICD-coded cohorts.
+Agreement was summarized for the three labels and for a binary collapse of SUPPORTED versus REFUTED or INSUFFICIENT. Overall agreement across the five models used Fleiss \(\kappa\), Krippendorff \(\alpha\), which accommodates missing ratings, and the proportion of pairs on which all five models agreed. Pairwise agreement was calculated for each of the 10 model pairs. Results were stratified by disease and by the position of the qualifying code in the admission's diagnosis sequence: principal (sequence number 1), middle (2--9), and late (10 or higher). In the primary analysis, a pair was confirmed only when five valid votes were cast and all five were SUPPORTED; REFUTED and INSUFFICIENT counted as not supporting. Unconfirmed pairs were recoded as not having the condition, changing only that disease's indicator, so each admission remained a case for its confirmed conditions and a control for the others. This recoded 40,462 of the 164,770 pairs, including all 648 pairs with fewer than five valid votes; 171 of these were supported by every model that responded and were recoded only because one model's output could not be parsed. As sensitivity analyses, we refitted the Layer 3 model with the unverified ICD-coded cohorts and with a majority threshold of at least three SUPPORTED votes.
 
 \subsection{Training data}
 
@@ -78,7 +78,7 @@ n\_stigma \sim section \times (&race + sex + medicaid + lep + age_c + sud + smi\
 \]
 The nine identity interactions formed one BH-FDR family. Layer 2 refitted identity models within cohorts with at least 1,000 notes. Each disease cohort formed a separate BH-FDR family. Levels required at least 50 notes, 20 BHC events, and 5 DI events. Post-fit checks required convergence, finite estimates, \(0.02<RR<50\), and a CI ratio below 200. Layer 2 provides disease-stratified identity estimates.
 
-Layer 3 jointly interacted section with all eight disease indicators and with identity and severity covariates. Its eight disease interactions formed one BH-FDR family.
+Layer 3 jointly interacted section with all eight disease indicators and with identity and severity covariates. In the primary analysis the disease indicators were those confirmed by all five LLMs; Table~\ref{tab:s_layer3} reports the same model with the unverified ICD-coded indicators. Its eight disease interactions formed one BH-FDR family.
 
 Age diagnostics used the 259,187-note complete-case group-analysis cohort. Crude age-stratified absolute rates used bands of 18--39, 40--64, 65--79, and 80 years or older, exact Poisson intervals for each rate, and log-scale intervals for crude BHC-DI RRs. The nonlinear diagnostic retained the primary Poisson GEE structure, covariates, subject clustering, log word-count offset, exchangeable working correlation, Pearson scale, and robust covariance. Age was represented by a restricted cubic spline with knots at 28, 56, 70, and 89 years, corresponding to the 5th, 35th, 65th, and 95th percentiles. A joint robust Wald test evaluated the two section-by-nonlinear-basis terms. Delta-method intervals accompany the BHC-DI gap at each age relative to the fitted gap at the sample mean age of 61.8 years.
 
@@ -376,10 +376,10 @@ Diabetes & race=Other & Event floor & 215 & 104 & 51 & 2 \\
 \end{tabular}}
 \end{table}
 
-\subsection{Layer 3 primary disease results}
+\subsection{Layer 3 disease results in ICD-coded cohorts}
 
 \begin{table}[H]
-\caption{Primary Layer 3 disease modification estimates}
+\caption{Layer 3 disease modification estimates in unverified ICD-coded cohorts}
 \label{tab:s_layer3}
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{lrrrrrrrl}
@@ -503,7 +503,7 @@ Support rates varied by disease (Table~\ref{tab:s_llm_disease}). The share of pa
 
 Support declined with the position of the qualifying code in the diagnosis sequence (Table~\ref{tab:s_llm_icd}). At least three models supported 94.1\% of principal-diagnosis pairs, 83.9\% of middle-position pairs, and 72.0\% of late-position pairs, and the share with no SUPPORTED votes rose from 2.4\% to 11.8\% and 22.2\%. Principal diagnoses accounted for only 5.7\% of adjudicated pairs, so most disease-cohort membership rested on secondary codes.
 
-Restricting disease cohorts to LLM-verified pairs left the main disease findings unchanged in direction (Table~\ref{tab:s_llm_layer3}). Obesity and diabetes continued to widen the adjusted BHC-DI gap, and serious mental illness and sickle cell disease continued to narrow it, under both vote thresholds. Two cohorts changed in their false discovery classification. Substance use disorder, which was not significant in the ICD-coded cohort (RR, 0.910), showed a narrower gap after verification (RR, 0.825 at three or more votes and 0.829 at five votes). The HIV estimate attenuated from 1.470 to 1.396 at five votes and no longer met the false discovery threshold. End-stage renal disease and chronic pain remained null at both thresholds.
+Confirming disease cohorts with the LLMs left the direction of every disease finding unchanged (Table~\ref{tab:s_llm_layer3}). Obesity and diabetes widened the adjusted BHC-DI gap, and serious mental illness and sickle cell disease narrowed it, in the ICD-coded cohorts and under both vote thresholds. Two cohorts changed in their false discovery classification. Substance use disorder, which was not significant in the ICD-coded cohort (RR, 0.910; $q=0.161$), showed a significantly narrower gap after confirmation (RR, 0.829; $q=0.018$ with five votes; RR, 0.825; $q=0.010$ with three or more). HIV attenuated from 1.470 ($q=0.038$) to 1.396 with five votes (95\% CI, 1.00-1.96; $q=0.070$) and no longer met the false discovery threshold ($q=0.057$ with three or more votes). End-stage renal disease and chronic pain remained null. With cohorts confirmed by all five LLMs, the findings for obesity, diabetes, substance use disorder, serious mental illness, and sickle cell disease met the false discovery threshold under all 10 sentence-window encoders; HIV widened the gap under all 10 but met the threshold under 6, and end-stage renal disease and chronic pain met it under none.
 
 \begin{table}[H]
 \caption{Distribution of SUPPORTED votes across five LLMs per admission--disease pair}
@@ -650,9 +650,9 @@ Disease cohort & ICD-coded & \(\geq\)3/5 SUPPORTED votes & 5/5 SUPPORTED votes \
 Serious mental illness & 0.725 (0.63-0.83)*** & 0.740 (0.64-0.86)*** & 0.753 (0.65-0.88)** \\
 Sickle cell disease & 0.392 (0.19-0.82)* & 0.323 (0.17-0.60)*** & 0.359 (0.16-0.79)* \\
 Substance use disorder & 0.910 (0.81-1.03) & 0.825 (0.72-0.95)** & 0.829 (0.72-0.96)* \\
-Chronic pain & 0.986 (0.83-1.18) & 0.992 & 1.010 \\
+Chronic pain & 0.986 (0.83-1.18) & 0.992 & 1.010 (0.78-1.31) \\
 HIV & 1.470 (1.05-2.05)* & 1.399 (1.01-1.94) & 1.396 (1.00-1.96) \\
-End-stage renal disease & 0.936 (0.77-1.14) & 0.882 & 0.848 \\
+End-stage renal disease & 0.936 (0.77-1.14) & 0.882 & 0.848 (0.69-1.04) \\
 Diabetes & 1.275 (1.15-1.41)*** & 1.308 (1.18-1.44)*** & 1.291 (1.17-1.43)*** \\
 Obesity & 1.376 (1.19-1.59)*** & 1.347 (1.13-1.61)** & 1.329 (1.11-1.60)** \\
 \bottomrule
@@ -661,7 +661,7 @@ Obesity & 1.376 (1.19-1.59)*** & 1.347 (1.13-1.61)** & 1.329 (1.11-1.60)** \\
 \item Values are covariate-adjusted interaction RRs (95\% CI) comparing the BHC-DI rate ratio for notes with versus without each condition. The ICD-coded column reproduces the Layer 3 estimates in Table~\ref{tab:s_layer3}; the 5/5 column corresponds to the primary disease definition. Verified columns restrict each disease cohort to admission--disease pairs with the stated number of SUPPORTED votes from five LLMs. Asterisks mark Benjamini-Hochberg \(q<0.05\) (*), \(q<0.01\) (**), and \(q<0.001\) (***); unmarked estimates did not meet \(q<0.05\). BHC, Brief Hospital Course; DI, Discharge Instructions; LLM, large language model.
 \end{tablenotes}
 \end{table}
-% TODO(HY): add 95% CIs for chronic pain and end-stage renal disease in the two verified columns.
+% TODO(HY): add 95% CIs for chronic pain and end-stage renal disease in the >=3/5 column (layer3_voted_comparison.csv).
 
 \section{Supplementary Note: Data Processing and Variable Definitions}
 \label{sec:s_processing}
