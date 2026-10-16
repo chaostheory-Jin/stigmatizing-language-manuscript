@@ -33,7 +33,7 @@
 
 Discharge Instructions (DI) was defined as the patient-facing section, while the remaining discharge-summary sections were classified as clinician-facing. The empirical analyses compared DI with Brief Hospital Course (BHC) as the primary clinician-facing section and History of Present Illness (HPI) as a secondary clinician-facing section. Discharge summaries were segmented at curated headers occurring at the start of a line, with adjacent headers delimiting a section body. The primary cohort required both BHC and DI, with at least 50 tokens in each. HPI was included only in its separate paired comparison. The parser scanned 331,793 notes, found 290,005 with both primary sections, and retained 259,207 after the length threshold. Header rules, token definition, and the full cohort flow are given in the Supplementary Note (Section~\ref{sec:s_processing}).
 
-The group-analysis build linked every retained note to note-level subject and admission identifiers. Twenty notes had no matching HOSP patient or admission record and lacked sex and age; complete-case modeling excluded these notes. The final group-analysis cohort contained 259,187 notes, 259,187 admissions, 125,271 subjects, and 518,374 paired BHC and DI rows. Missing insurance was coded as non-Medicaid for 2,793 notes. Missing language was coded as English or LEP=0 for 398 notes. These were coding decisions rather than row exclusions.
+The group-analysis build linked every retained note to note-level subject and admission identifiers. Twenty notes had no matching patient or admission record because their admissions, present in MIMIC-IV version 2.2, have been removed from version 3.1; they lacked sex and age, and complete-case modeling excluded them. The final group-analysis cohort contained 259,187 notes, 259,187 admissions, 125,271 subjects, and 518,374 paired BHC and DI rows. Missing insurance was coded as non-Medicaid for 2,793 notes. Missing language was coded as English or LEP=0 for 398 notes. These were coding decisions rather than row exclusions.
 
 \subsection{LLM verification of ICD-coded disease cohorts}
 
@@ -50,7 +50,7 @@ Classifier training used the Harrigian annotation resource and 89-keyword lexico
 
 We fine-tuned GatorTron-base as the primary binary stigma classifier and selected it by validation macro-F1 from 12 sentence-window encoders. Training used AdamW, an initial learning rate of \(2\times10^{-5}\), a linear scheduler, training and evaluation batch sizes of 16 and 32, 20 epochs, no class weights, BertTokenizer, and a maximum sequence length of 256. The selected checkpoint was epoch 12, step 3036. Training used the TrainingArguments default seed of 42, PyTorch 2.6.0+cu124, and Transformers 4.56.2. Because the model and new classification head were instantiated before the Trainer applied its seed, the saved weights are the authoritative artifact and exact weight reproduction from seed 42 alone is not guaranteed. The upstream base-model revision was not pinned.
 
-In the analysis corpus, the 89-keyword lexicon identified credibility or obstinance, compliance, and other descriptor candidates using case-insensitive matching with word boundaries. Candidate generation yielded 154,984 spans. Cleaning, normalization, and relocation within sentence context succeeded for 154,895 candidates. The remaining 89 records failed relocation; none failed after relocation.
+In the analysis corpus, the 89-keyword lexicon identified Credibility \& Obstinacy, Compliance, and Descriptors candidates using case-insensitive matching with word boundaries. Candidate generation yielded 154,984 spans. Cleaning, normalization, and relocation within sentence context succeeded for 154,895 candidates. The remaining 89 records failed relocation; none failed after relocation.
 
 For the anchor-family analysis, we streamed the saved binary output and aggregated successfully relocated candidates and stigmatizing-language events by section and the three prespecified broad families. Conditional probabilities use scored candidates as the denominator; the 89 relocation failures were retained in a separate audit. Wilson intervals describe each family-specific probability. For BHC-DI and HPI-DI, direct standardization applied the candidate-count distribution pooled across the two compared sections to both sets of family-specific probabilities. We also used the symmetric Kitagawa two-component identity to partition the crude conditional-probability difference into broad-family composition and within-family components. These descriptive components are not causal and do not standardize the exact terms within each family.
 
@@ -407,19 +407,19 @@ Chronic pain & 14,751 & 8,569 & 0.887 & 0.105 & 0.986 & 0.828-1.175 & 0.876 & 0.
 \toprule
 Section & Anchor family & Scored candidates & Stigma events & $P$(stigma$\mid$scored) & Share of section events \\
 \midrule
-BHC & Credibility/obstinance & 3,321 & 3,212 & 0.967 & 5.0\% \\
+BHC & Credibility \& Obstinacy & 3,321 & 3,212 & 0.967 & 5.0\% \\
 BHC & Compliance & 55,300 & 41,183 & 0.745 & 64.3\% \\
-BHC & Other & 41,854 & 19,614 & 0.469 & 30.6\% \\
-HPI & Credibility/obstinance & 2,310 & 2,117 & 0.916 & 7.3\% \\
+BHC & Descriptors & 41,854 & 19,614 & 0.469 & 30.6\% \\
+HPI & Credibility \& Obstinacy & 2,310 & 2,117 & 0.916 & 7.3\% \\
 HPI & Compliance & 20,361 & 13,803 & 0.678 & 47.3\% \\
-HPI & Other & 22,858 & 13,276 & 0.581 & 45.5\% \\
-DI & Credibility/obstinance & 145 & 136 & 0.938 & 3.8\% \\
+HPI & Descriptors & 22,858 & 13,276 & 0.581 & 45.5\% \\
+DI & Credibility \& Obstinacy & 145 & 136 & 0.938 & 3.8\% \\
 DI & Compliance & 5,766 & 2,156 & 0.374 & 60.5\% \\
-DI & Other & 2,702 & 1,273 & 0.471 & 35.7\% \\
+DI & Descriptors & 2,702 & 1,273 & 0.471 & 35.7\% \\
 \bottomrule
 \end{tabular}
 \begin{tablenotes}
-\item Probabilities use successfully relocated and scored candidates. The 89 relocation failures comprised 72 BHC-other, 12 HPI-other, 1 HPI-compliance, and 4 DI-other candidates and are excluded from these denominators. Event shares sometimes differ slightly from 100\% because of rounding. BHC, Brief Hospital Course; HPI, History of Present Illness; DI, Discharge Instructions.
+\item Probabilities use successfully relocated and scored candidates. The 89 relocation failures comprised 72 BHC Descriptors, 12 HPI Descriptors, 1 HPI Compliance, and 4 DI Descriptors candidates and are excluded from these denominators. Event shares sometimes differ slightly from 100\% because of rounding. BHC, Brief Hospital Course; HPI, History of Present Illness; DI, Discharge Instructions.
 \end{tablenotes}
 \end{table}
 
@@ -670,7 +670,7 @@ This note documents each processing step between the source data and the analysi
 
 \subsection{Source data}
 
-Discharge summaries came from the discharge file of MIMIC-IV-Note version 2.2, read with Latin-1 encoding. Patient, admission, and diagnosis tables came from the hosp module of MIMIC-IV version 3.1. % TODO(HY): the main text and reference list cite MIMIC-IV version 2.2; confirm which version was used and align all three.
+Discharge summaries came from the discharge file of MIMIC-IV-Note version 2.2 (doi:10.13026/1n74-ne17), read with Latin-1 encoding. The patients, admissions, diagnoses\_icd, and d\_icd\_diagnoses tables came from the hosp module of MIMIC-IV version 3.1 (doi:10.13026/kpb9-mt58). Combining the two releases explains the 20 notes that could not be linked: their admissions are present in MIMIC-IV version 2.2 but were removed from version 3.1.
 The stigmatizing-language resource of Harrigian and colleagues (version 1.0.0) supplied the 89-term keyword lexicon and the 5,043 annotated training instances.
 
 \subsection{Section segmentation and cohort construction}
@@ -704,7 +704,7 @@ Group-analysis cohort (complete cases) & 259,187 \\
 
 \subsection{Keyword candidates and scoring}
 
-The 89 lexicon terms fall into three non-overlapping families: 13 adamant terms, 26 compliance terms, and 50 other terms. Keyword matching ignored case and required that the match not be preceded or followed by a letter, digit, or underscore. A space within a multiword term could match either a space or a hyphen, so that drug seeking also matched drug-seeking, and longer terms were matched before shorter ones. Because a hyphen counts as a boundary under this rule, non-compliance was matched as the term compliance rather than as noncompliance; whether such a match was stigmatizing was left to the classifier.
+The 89 lexicon terms fall into the three non-overlapping families defined by Harrigian and colleagues: Credibility \& Obstinacy (13 terms), Compliance (26 terms), and Descriptors (50 terms). Keyword matching ignored case and required that the match not be preceded or followed by a letter, digit, or underscore. A space within a multiword term could match either a space or a hyphen, so that drug seeking also matched drug-seeking, and longer terms were matched before shorter ones. Because a hyphen counts as a boundary under this rule, non-compliance was matched as the term compliance rather than as noncompliance; whether such a match was stigmatizing was left to the classifier.
 
 For scoring, each candidate was represented by the sentence containing the keyword and one sentence on either side, taken from the original section text. Sentence boundaries were a period, question mark, or exclamation mark followed by whitespace. The window was then cleaned and normalized with the procedures released with the annotation resource, and the keyword was located again in the normalized text. When the keyword occurred more than once in the window, the occurrence nearest the window midpoint was marked. Inputs longer than 256 tokens were truncated, and each candidate received the label with the higher predicted score. Candidates whose keyword could not be found after normalization were excluded from event counts (Table~\ref{tab:s_candidates}). When the same keyword occurred twice within one three-sentence window, both candidates were marked at the same occurrence, so one of the two was anchored to the wrong position.
 
@@ -735,25 +735,25 @@ Total & 154,984 & 89 & 154,895 \\
 The coordinates of the 5,043 annotations are defined on text processed with the cleaning and normalization procedures released with the resource. After applying the same procedures, every annotated keyword was located (5,043 of 5,043). Each training input contained the keyword sentence and one sentence on either side, with the keyword enclosed by the reserved tokens [unused1] and [unused2]. Negative, disbelief, and difficult annotations formed the stigma class; neutral, positive, and exclude annotations formed the non-stigma class. Instances were split 80/10/10 by note identifier with a fixed random seed of 42, giving 4,037 training, 501 validation, and 505 test instances.
 
 Two features of the training data bear on interpretation. First, the split was made by note rather than by patient, so different notes from the same patient could fall in the training and test sets. Second, 3,552 of the 4,710 annotated notes were also in the 259,207-note analysis cohort, about 1.4\% of the cohort, so the classifier scored some passages it had seen during training.
-% TODO(HY): consider a sensitivity analysis excluding these 3,552 notes, or add this point to the main-text limitations.
+% TODO(HY): add the sensitivity analysis refitting the models without these 3,552 notes (no retraining needed); the point is now also in the main-text Limitations.
 
 \subsection{Analysis dataset}
 
 The analysis dataset contained one row for each BHC, HPI, and DI section of each cohort note: 259,207 BHC rows, 259,207 DI rows, and 252,581 HPI rows, for 770,995 rows in total. Notes without an HPI section had no HPI row. Stigmatizing-language events were counted for each note and section and merged onto these rows, and sections with no events were kept with a count of zero (713,965 rows).
 
-Every note was linked to its patient and admission identifiers without loss. Twenty notes (57 rows) had no matching patient or admission record and therefore lacked sex and age; these were removed in the final complete-case step. The remaining covariates were coded as follows.
+Every note was linked to its patient and admission identifiers without loss. Twenty notes (57 rows) had no matching patient or admission record because their admissions had been removed from MIMIC-IV version 3.1, and therefore lacked sex and age; these were removed in the final complete-case step. The remaining covariates were coded as follows.
 
 Medicaid status was 1 when the recorded insurance was Medicaid and 0 for Medicare, private, other, no charge, or missing insurance (missing for 2,793 notes). Limited English proficiency was 1 for any recorded language other than English, including the category Other (677 admissions), and missing language was coded as English (398 notes). Age was the anchor age plus the difference between the admission year and the anchor year, truncated to 18--91 years and centered at the sample mean. Length of stay was discharge time minus admission time, with negative values set to zero, and entered the models as \(\log(1+\text{days})\).
 
 Race and ethnicity were assigned from the recorded category by checking, in order, for Black, Hispanic or Latino, Asian, White, and American Indian or Alaska Native or Native Hawaiian or Pacific Islander; all remaining values were coded as Unknown. The Unknown group (19,075 admissions) comprised Other (8,709), Unknown (6,816), Patient Declined (1,082), Portuguese (989), Unable to Obtain (922), South American (302), and Multiple Race (255). The Other group (714 admissions) comprised American Indian or Alaska Native (503) and Native Hawaiian or Pacific Islander (211).
-% TODO(HY): decide whether South American should be coded as Hispanic or Latino and how Portuguese should be coded.
+% TODO(HY): v2 re-run (pending approval) follows OMB 1997: South American -> Hispanic or Latino (+302), Portuguese -> White (+989), Unknown 19,075 -> 17,784. Update this paragraph if v2 becomes the reported analysis.
 
 For modeling, BHC was coded 1 and DI 0, and the offset was the log of the section token count with a floor of one token. The complete-case step on race and ethnicity, sex, Medicaid status, limited English proficiency, age, and token count removed 57 rows from 20 notes, all of them the unlinked notes above. The final group-analysis dataset contained 259,187 notes (one per admission) from 125,271 patients, with 518,374 BHC and DI rows, of which 481,383 had zero events, and 770,938 rows across all three sections.
 
 \subsection{Disease cohort definitions}
 
 Disease indicators were derived from all diagnosis codes recorded for each admission (Table~\ref{tab:s_disease_codes}). MIMIC-IV stores codes without decimal points; codes were stripped of surrounding whitespace and converted to upper case before matching. Code lists were applied separately by ICD version, so ICD-9 prefixes were matched only against ICD-9 codes and ICD-10 prefixes only against ICD-10 codes. A code was positive when it began with an inclusion prefix and did not begin with an exclusion prefix. An admission was assigned a condition when any of its codes was positive, regardless of the code's position in the diagnosis sequence; admissions had up to 57 codes. Ninety-one admissions had no recorded diagnosis codes and were coded as having none of the eight conditions and a Charlson score of zero.
-% TODO(HY): pending code-list corrections: (1) remove ICD-9 282.64 from the sickle cell exclusions (it is sickle-cell/Hb-C disease with crisis; trait is 282.5, which is outside 282.6); (2) decide whether obesity should include overweight (278.02, E66.3; 354 admissions qualify only through these codes); (3) remove 296.82 and 298.0 from SMI (13 admissions); (4) add ICD-9 291 and 292 to SUD to match the scope of ICD-10 F10--F19 (966 admissions); (5) decide how to code the 91 admissions without diagnosis codes. Update this section and Table S25 after re-running.
+% TODO(HY): v2 code lists (re-run pending approval of the obesity and race decisions): sickle cell no longer excludes 282.64 (419 -> 428); SMI drops 296.82 and 298.0 (11,583 -> 11,570); SUD adds ICD-9 291 but not 292 (24,425 -> 24,627); obesity excludes overweight 278.02 and E66.3 (27,603 -> 27,249). Chronic pain, HIV, ESRD, and diabetes unchanged. Switch this section and Table S25 to v2 if v2 becomes the reported analysis.
 
 \begin{table}[H]
 \caption{ICD code definitions of the eight disease cohorts}
@@ -807,17 +807,17 @@ Diabetes without complications & 1 & 250.0--250.3, 250.8, 250.9 & E10.0, E10.1, 
 Diabetes with complications & 2 & 250.4--250.7 & E10.2--E10.5, E10.7 and the same subcodes of E11--E14 \\
 Hemiplegia or paraplegia & 2 & 334.1, 342, 343, 344.0--344.6, 344.9 & G04.1, G11.4, G80.1, G80.2, G81, G82, G83.0--G83.4, G83.9 \\
 Renal disease & 2 & 403.01, 403.11, 403.91, 404.02, 404.03, 404.12, 404.13, 404.92, 404.93, 582, 583.0--583.2, 583.4, 583.6, 583.7, 585, 586, 588.0, V42.0, V45.1, V56 & I12.0, I13.1, N03.2--N03.7, N05.2--N05.7, N18, N19, N25.0, Z49.0--Z49.2, Z94.0, Z99.2 \\
-Any malignancy & 2 & Malignant neoplasm codes in 140--208 as listed by Quan and colleagues, 195.0--195.8, 238.6 & Solid and hematologic malignancies within C00--C76 and C81--C97 as listed by Quan and colleagues \\
+Any malignancy & 2 & 140--165, 170--172, 174--176, 179, 180--194, 195.0--195.8, 200--209, 238.6 & C00--C26, C30--C34, C37--C41, C43, C45--C58, C60--C76, C81--C85, C88, C90--C97 \\
 Moderate or severe liver disease & 3 & 456.0--456.2, 572.2--572.4, 572.8 & I85.0, I85.9, I86.4, I98.2, K70.4, K71.1, K72.1, K72.9, K76.5--K76.7 \\
 Metastatic solid tumor & 6 & 196--199 & C77--C80 \\
 AIDS/HIV & 6 & 042--044 & B20--B22, B24 \\
 \bottomrule
 \end{tabular}
 \begin{tablenotes}
-\item Codes are shown with decimal points, and each entry matches every code that begins with it.
+\item Codes are shown with decimal points, and each entry matches every code that begins with it. The lists follow Quan and colleagues, with one deviation: the ICD-9 any-malignancy prefix 20 also matched 209.x, a category added in 2009. As a result, benign carcinoid tumors (209.4--209.6) added the any-malignancy weight for 83 admissions, 72 of which had no other qualifying malignancy code, and 160 admissions with secondary neuroendocrine tumors (209.7) were scored as any malignancy (weight 2) rather than metastatic solid tumor (weight 6). ICD-10-CM categories added after Quan and colleagues (C4A, C7A, C7B) were not included.
 \end{tablenotes}
 \end{table}
-% TODO(HY): replace the any-malignancy row with the exact prefix list used in the analysis.
+% TODO(HY): the v2 re-run restricts any malignancy to 200--208 and 209.0--209.3 and moves 209.7 to metastatic (Charlson changes for 231 admissions); switch this table if v2 becomes the reported analysis.
 
 \subsection{Input to LLM verification}
 
