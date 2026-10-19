@@ -37,8 +37,7 @@ The group-analysis build linked every retained note to note-level subject and ad
 
 \subsection{LLM verification of ICD-coded disease cohorts}
 
-Disease cohorts were defined from ICD diagnosis codes linked to each admission. Because a diagnosis code does not guarantee that the condition is documented in the discharge summary, we assessed whether each coded condition was supported by the note text. Each admission--disease pair was adjudicated independently by five open-weight large language models (LLMs): Qwen3.5-27B, Gemma-4-31B, GLM-4-32B, Mistral-24B, and gpt-oss-20b. Each model read seven sections of the discharge summary, with BHC, DI, HPI, Social History, and the ICD codes withheld (Supplementary Note), and returned one of three labels: SUPPORTED, REFUTED, or INSUFFICIENT. The adjudication covered 164,770 admission--disease pairs from 122,301 admissions across eight disease cohorts, for 823,850 model inferences. Outputs that could not be parsed were treated as missing votes rather than as a label: 568 for gpt-oss-20b (0.345\%), 67 for GLM-4-32B (0.041\%), 15 for Mistral-24B (0.009\%), 1 for Gemma-4-31B (0.001\%), and none for Qwen3.5-27B, totaling 651 (0.079\%). Qwen3.5-27B returned duplicate rows for some pairs; these were collapsed to the first occurrence, and only two duplicates disagreed.
-% TODO(HY): add the prompt summary, label definitions, and decoding settings. Table S11 reports the ICD-coded Layer 3 model; switch it to the 5/5 cohorts when subject counts and p-values are available, or keep it as the ICD-coded comparison.
+Disease cohorts were defined from ICD diagnosis codes linked to each admission. Because a diagnosis code does not guarantee that the condition is documented in the discharge summary, we assessed whether each coded condition was supported by the note text. Each admission--disease pair was adjudicated independently by five open-weight large language models (LLMs): Qwen3.5-27B, Gemma-4-31B, GLM-4-32B, Mistral-24B, and gpt-oss-20b. Each model read seven sections of the discharge summary, with BHC, DI, HPI, Social History, and the ICD codes withheld (Supplementary Note), and returned one of three labels: SUPPORTED, REFUTED, or INSUFFICIENT. The adjudication covered 164,770 admission--disease pairs from 122,301 admissions across eight disease cohorts, for 823,850 model inferences. Outputs that could not be parsed were treated as missing votes rather than as a label: 568 for gpt-oss-20b (0.345\%), 67 for GLM-4-32B (0.041\%), 15 for Mistral-24B (0.009\%), 1 for Gemma-4-31B (0.001\%), and none for Qwen3.5-27B, totaling 651 (0.079\%). All missing verdicts arose from outputs that reached the maximum-token limit before the JSON object closed. Because of an infrastructure fault, 11,193 Qwen3.5-27B pairs were run twice; the first output was kept, and 11,191 of the duplicated pairs (99.98\%) had identical verdicts. The evidence sections, disease definitions, prompt, model versions, and decoding settings are given in the Supplementary Note (Section~\ref{sec:s_llm_protocol}).
 
 Agreement was summarized for the three labels and for a binary collapse of SUPPORTED versus REFUTED or INSUFFICIENT. Overall agreement across the five models used Fleiss \(\kappa\), Krippendorff \(\alpha\), which accommodates missing ratings, and the proportion of pairs on which all five models agreed. Pairwise agreement was calculated for each of the 10 model pairs. Results were stratified by disease and by the position of the qualifying code in the admission's diagnosis sequence: principal (sequence number 1), middle (2--9), and late (10 or higher). In the primary analysis, a pair was confirmed only when five valid votes were cast and all five were SUPPORTED; REFUTED and INSUFFICIENT counted as not supporting. Unconfirmed pairs were recoded as not having the condition, changing only that disease's indicator, so each admission remained a case for its confirmed conditions and a control for the others. This recoded 40,462 of the 164,770 pairs, including all 648 pairs with fewer than five valid votes; 171 of these were supported by every model that responded and were recoded only because one model's output could not be parsed. As sensitivity analyses, we refitted the Layer 3 model with the unverified ICD-coded cohorts and with a majority threshold of at least three SUPPORTED votes.
 
@@ -199,38 +198,46 @@ allenai/scibert-scivocab-uncased & 0.9094 & 0.9202 & 0.8948 & 0.9050 & 8.09 & 7.
 \end{tabular}}
 \end{table}
 
-\subsection{Layer 1 primary identity results}
+\subsection{Layer 1 identity results}
 
 \begin{table}[H]
-\caption{Primary Layer 1 identity modification estimates}
+\caption{Layer 1 identity modification estimates}
 \label{tab:s_layer1}
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{lrrrrrrrrl}
 \toprule
 Contrast & Notes & Subjects & BHC events & BHC/1k & DI events & DI/1k & RR (95\% CI) & BH q \\
 \midrule
-Age per +1 year & 259,187 & 125,271 & 64,006 & 0.640 & 3,565 & 0.064 & 0.989 (0.986-0.992) & \(1.90\times10^{-14}\) \\
-Black vs White & 38,179 & 15,459 & 13,232 & 0.868 & 600 & 0.078 & 1.102 (0.980-1.238) & 0.188 \\
-Hispanic vs White & 13,532 & 6,202 & 3,305 & 0.666 & 145 & 0.050 & 1.191 (0.967-1.466) & 0.188 \\
-Asian vs White & 8,215 & 4,588 & 1,616 & 0.518 & 93 & 0.053 & 0.917 (0.716-1.174) & 0.554 \\
-Other vs White & 714 & 405 & 157 & 0.509 & 11 & 0.073 & 0.689 (0.326-1.453) & 0.421 \\
-Unknown vs White & 19,075 & 14,068 & 4,498 & 0.602 & 280 & 0.062 & 0.906 (0.788-1.042) & 0.247 \\
-Female vs male & 131,639 & 63,775 & 29,738 & 0.600 & 1,628 & 0.058 & 1.078 (0.996-1.166) & 0.188 \\
-Medicaid vs non-Medicaid & 41,485 & 21,257 & 15,292 & 0.934 & 720 & 0.082 & 1.111 (0.987-1.251) & 0.188 \\
-LEP vs English & 25,727 & 11,682 & 6,545 & 0.640 & 378 & 0.071 & 1.005 (0.870-1.162) & 0.944 \\
+Age per +1 year & 259,187 & 125,271 & 64,006 & 0.640 & 3,565 & 0.064 & 0.989 (0.986-0.992) & $<$0.001 \\
+Black vs White & 38,179 & 15,459 & 13,232 & 0.868 & 600 & 0.078 & 1.112 (0.992-1.247) & 0.171 \\
+Hispanic vs White & 13,532 & 6,202 & 3,305 & 0.666 & 145 & 0.050 & 1.201 (0.978-1.473) & 0.171 \\
+Asian vs White & 8,215 & 4,588 & 1,616 & 0.518 & 93 & 0.053 & 0.905 (0.708-1.157) & 0.479 \\
+Other vs White & 714 & 405 & 157 & 0.509 & 11 & 0.073 & 0.717 (0.334-1.541) & 0.479 \\
+Unknown vs White & 19,075 & 14,068 & 4,498 & 0.602 & 280 & 0.062 & 0.908 (0.792-1.042) & 0.256 \\
+Female vs male & 131,639 & 63,775 & 29,738 & 0.600 & 1,628 & 0.058 & 1.078 (0.998-1.164) & 0.171 \\
+Medicaid vs non-Medicaid & 41,485 & 21,257 & 15,292 & 0.934 & 720 & 0.082 & 1.103 (0.983-1.237) & 0.171 \\
+LEP vs English & 25,727 & 11,682 & 6,545 & 0.640 & 378 & 0.071 & 1.019 (0.882-1.177) & 0.801 \\
 \bottomrule
 \end{tabular}}
 \begin{tablenotes}
-\item Event counts and rates are crude values for the index category named first in each contrast; the age row reports the full group-analysis cohort. Adjusted interaction RRs compare the BHC-DI rate ratio for the index category with the named reference category. BHC, Brief Hospital Course; DI, Discharge Instructions; LEP, limited English proficiency; BH, Benjamini-Hochberg.
+\item Event counts and rates are crude values for the index category named first in each contrast; the age row reports the full group-analysis cohort. Adjusted interaction RRs compare the BHC-DI rate ratio for the index category with the named reference category; the disease adjustment uses cohorts confirmed by all five LLMs. With unverified ICD-coded disease indicators, the same contrasts gave the same conclusions (age RR 0.989; all other $q\geq0.188$). BHC, Brief Hospital Course; DI, Discharge Instructions; LEP, limited English proficiency; BH, Benjamini-Hochberg; LLM, large language model.
 \end{tablenotes}
 \end{table}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.82\linewidth]{figure3_identity.pdf}
-\caption{Identity-related modification of the clinician-facing BHC to patient-facing DI rate ratio. Squares show adjusted interaction RRs and horizontal lines show 95\% CIs. Filled squares met the Benjamini-Hochberg false discovery threshold. BHC, Brief Hospital Course; DI, Discharge Instructions; LEP, limited English proficiency.}
-\visiblealt{Forest plot with nine adjusted identity interaction estimates on a ratio scale. Age is the only filled marker and lies just below 1 with a narrow interval; the intervals for documented race and ethnicity, sex, Medicaid status, and limited English proficiency cross 1.}
+\includegraphics[width=0.85\linewidth]{figure_s1_identity_vote5.png}
+\caption{Identity-related modification of the clinician-facing BHC to patient-facing DI rate ratio. Markers show adjusted interaction RRs and horizontal lines 95\% CIs; values and Benjamini-Hochberg $q$ values are listed at right. The filled marker met the false discovery threshold. Disease adjustment uses cohorts confirmed by all five LLMs. BHC, Brief Hospital Course; DI, Discharge Instructions; LLM, large language model.}
+\visiblealt{Forest plot with nine identity interaction estimates on a log scale. Age per year is the only filled marker, at 0.989 with a very narrow interval. Black, Hispanic, female, Medicaid, and limited English proficiency estimates lie slightly above 1, and Asian, Other, and Unknown race estimates lie below 1, all with intervals that include 1.}
 \label{fig:s_identity}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\linewidth]{figure_s_identity_encoders.png}
+\caption{Identity interaction RRs across 12 binary sentence-window encoders, with disease adjustment using cohorts confirmed by all five LLMs. Diamonds mark the primary GatorTron-base classifier, filled circles the encoders that met the 0.90 test-performance threshold for the sensitivity set, and open circles the encoders that did not. Text at right gives the number of encoders whose estimate met the Benjamini-Hochberg threshold among the 10 qualifying encoders and, in parentheses, among all 12. LLM, large language model.}
+\visiblealt{Dot plot with one row per identity contrast and one marker per encoder. For every contrast except age, the markers cluster on one side of 1 and none met the false discovery threshold. Age markers sit just below 1, and age met the threshold under all 12 encoders.}
+\label{fig:s_identity_encoders}
 \end{figure}
 
 \subsection{Layer 2 disease-stratified identity results}
@@ -348,7 +355,7 @@ Diabetes & LEP vs English & 9,868 & 3,955 & 0.930 & 0.727-1.189 & 0.750 \\
 \end{tabular}
 \end{table}
 
-Only age within diabetes reached \(q<0.05\) among disease-stratified contrasts. The ALL rows are a replication under the Layer 2 formula and should not replace the jointly adjusted Layer 1 estimates.
+Tables S6--S9 stratify by the unverified ICD-coded cohorts. Only age within diabetes reached \(q<0.05\) among disease-stratified contrasts. Refitting Layer 2 in cohorts confirmed by all five LLMs gave the same conclusion: age was the only contrast to meet the threshold, in the full sample (RR per year, 0.989; $q<0.001$) and within diabetes (RR per year, 0.99; $q=0.006$). Some cell estimates changed, for example substance use disorder by female sex (1.28; 95\% CI, 1.00-1.64; $q=0.360$) and end-stage renal disease by Medicaid status (2.32; 95\% CI, 1.08-4.97; $q=0.192$), but none met the threshold. Two further cells (substance use disorder by Asian race and obesity by Hispanic ethnicity) fell below the event floor after confirmation, so 14 rather than 12 cells were excluded, and sickle cell disease remained below the 1,000-note threshold. The ALL rows are a replication under the Layer 2 formula and should not replace the jointly adjusted Layer 1 estimates.
 
 \clearpage
 \begin{table}[H]
@@ -746,14 +753,13 @@ Every note was linked to its patient and admission identifiers without loss. Twe
 Medicaid status was 1 when the recorded insurance was Medicaid and 0 for Medicare, private, other, no charge, or missing insurance (missing for 2,793 notes). Limited English proficiency was 1 for any recorded language other than English, including the category Other (677 admissions), and missing language was coded as English (398 notes). Age was the anchor age plus the difference between the admission year and the anchor year, truncated to 18--91 years and centered at the sample mean. Length of stay was discharge time minus admission time, with negative values set to zero, and entered the models as \(\log(1+\text{days})\).
 
 Race and ethnicity were assigned from the recorded category by checking, in order, for Black, Hispanic or Latino, Asian, White, and American Indian or Alaska Native or Native Hawaiian or Pacific Islander; all remaining values were coded as Unknown. The Unknown group (19,075 admissions) comprised Other (8,709), Unknown (6,816), Patient Declined (1,082), Portuguese (989), Unable to Obtain (922), South American (302), and Multiple Race (255). The Other group (714 admissions) comprised American Indian or Alaska Native (503) and Native Hawaiian or Pacific Islander (211).
-% TODO(HY): v2 re-run (pending approval) follows OMB 1997: South American -> Hispanic or Latino (+302), Portuguese -> White (+989), Unknown 19,075 -> 17,784. Update this paragraph if v2 becomes the reported analysis.
 
 For modeling, BHC was coded 1 and DI 0, and the offset was the log of the section word count with a floor of one word. The complete-case step on race and ethnicity, sex, Medicaid status, limited English proficiency, age, and word count removed 57 rows from 20 notes, all of them the unlinked notes above. The final group-analysis dataset contained 259,187 notes (one per admission) from 125,271 patients, with 518,374 BHC and DI rows, of which 481,383 had zero events, and 770,938 rows across all three sections.
 
 \subsection{Disease cohort definitions}
 
 Disease indicators were derived from all diagnosis codes recorded for each admission (Table~\ref{tab:s_disease_codes}). MIMIC-IV stores codes without decimal points; codes were stripped of surrounding whitespace and converted to upper case before matching. Code lists were applied separately by ICD version, so ICD-9 prefixes were matched only against ICD-9 codes and ICD-10 prefixes only against ICD-10 codes. A code was positive when it began with an inclusion prefix and did not begin with an exclusion prefix. An admission was assigned a condition when any of its codes was positive, regardless of the code's position in the diagnosis sequence; admissions had up to 57 codes. Ninety-one admissions had no recorded diagnosis codes and were coded as having none of the eight conditions and a Charlson score of zero.
-% TODO(HY): v2 code lists (re-run pending approval of the obesity and race decisions): sickle cell no longer excludes 282.64 (419 -> 428); SMI drops 296.82 and 298.0 (11,583 -> 11,570); SUD adds ICD-9 291 but not 292 (24,425 -> 24,627); obesity excludes overweight 278.02 and E66.3 (27,603 -> 27,249). Chronic pain, HIV, ESRD, and diabetes unchanged. Switch this section and Table S25 to v2 if v2 becomes the reported analysis.
+The five-model audit removed most admissions that entered a cohort through codes outside its intended definition. Of 354 pairs that qualified for obesity only through overweight codes (278.02, E66.3), 30 were confirmed, and those notes documented obesity; of 13 pairs that qualified for serious mental illness only through depressive codes (296.82, 298.0), 1 was confirmed. The audit could not recover cases that the code lists never included. ICD-9 alcohol-induced mental disorders (291), which correspond to ICD-10 F10 codes, were not included in substance use disorder (202 admissions), and the exclusion of 282.64, which denotes sickle-cell/Hb-C disease with crisis rather than trait, removed 9 admissions from the sickle cell cohort.
 
 \begin{table}[H]
 \caption{ICD code definitions of the eight disease cohorts}
@@ -817,10 +823,71 @@ AIDS/HIV & 6 & 042--044 & B20--B22, B24 \\
 \item Codes are shown with decimal points, and each entry matches every code that begins with it. The lists follow Quan and colleagues, with one deviation: the ICD-9 any-malignancy prefix 20 also matched 209.x, a category added in 2009. As a result, benign carcinoid tumors (209.4--209.6) added the any-malignancy weight for 83 admissions, 72 of which had no other qualifying malignancy code, and 160 admissions with secondary neuroendocrine tumors (209.7) were scored as any malignancy (weight 2) rather than metastatic solid tumor (weight 6). ICD-10-CM categories added after Quan and colleagues (C4A, C7A, C7B) were not included.
 \end{tablenotes}
 \end{table}
-% TODO(HY): the v2 re-run restricts any malignancy to 200--208 and 209.0--209.3 and moves 209.7 to metastatic (Charlson changes for 231 admissions); switch this table if v2 becomes the reported analysis.
 
-\subsection{Input to LLM verification}
+\subsection{LLM verification protocol}
+\label{sec:s_llm_protocol}
 
-Every admission--disease pair that was positive under the code lists above was submitted for verification, for 164,770 pairs. The models received text from seven sections of the discharge summary; BHC, DI, HPI, and Social History were withheld, so that verification did not draw on the sections in which stigmatizing language was measured. The seven sections were concatenated and truncated to 6,000 characters, and the ICD codes themselves were not shown to the models. The primary disparity models in the main text use cohorts confirmed by all five models; Table~\ref{tab:s_llm_layer3} compares them with the unverified code-based cohorts and with a three-vote threshold.
+The unit of verification was an admission--disease pair: an admission in the analysis cohort with at least one diagnosis code in the cohort's code list (Table~\ref{tab:s_disease_codes}). Several codes for the same disease on one admission formed a single pair, giving 164,770 pairs. Each discharge summary was split at its section headers, and the models saw seven sections: Past Medical History, Chief Complaint, Discharge Diagnosis, Pertinent Results, Physical Exam, Medications on Admission, and Discharge Medications. These were concatenated in that order under their headers and truncated to 6,000 characters. Brief Hospital Course and Discharge Instructions were withheld because the stigma outcome is measured in them, so that verification of the exposure could not depend on the outcome text; History of Present Illness and Social History were withheld because they are analyzed elsewhere in the study. The ICD code, its descriptor, its position in the diagnosis list, and the number of codes on the admission were never shown to the models. Each model received only a fixed written definition of the disease (Table~\ref{tab:s_llm_definitions}).
+
+\begin{table}[H]
+\caption{Disease definitions given to the LLMs}
+\label{tab:s_llm_definitions}
+\centering
+\small
+\begin{tabular}{@{}l>{\raggedright\arraybackslash}p{0.72\linewidth}@{}}
+\toprule
+Cohort & Definition shown to the model \\
+\midrule
+Substance use disorder & A substance use disorder involving alcohol or non-tobacco drugs (dependence, abuse, or use disorder). Tobacco or nicotine use alone does not count. \\
+Serious mental illness & A serious mental illness, specifically a schizophrenia-spectrum disorder or bipolar disorder. Unipolar depression or anxiety alone does not count. \\
+Sickle cell disease & Sickle cell disease. Sickle cell trait alone does not count. \\
+Chronic pain & Chronic pain or chronic pain syndrome as an ongoing documented condition. \\
+Obesity & Obesity (including morbid obesity) as a documented clinical condition. \\
+HIV & HIV infection (symptomatic disease or documented seropositive status). \\
+End-stage renal disease & End-stage renal disease or dialysis-dependent kidney failure. Earlier-stage chronic kidney disease does not count. \\
+Diabetes & Diabetes mellitus of any type. \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\item Wording is shown in sentence case; the prompt used the definitions verbatim, with ``does NOT count'' in capitals. LLM, large language model.
+\end{tablenotes}
+\end{table}
+
+The prompt consisted of a system message and a user message, reproduced verbatim below; \texttt{\{desc\}} is the disease definition and \texttt{\{evidence\}} the excerpts.
+
+\begin{quote}
+\small\raggedright
+\textit{System message.} You are a careful clinical chart reviewer. You judge only what the provided excerpts actually document. You never infer a diagnosis from indirect hints such as a medication that has multiple indications, a body habitus remark, or a risk factor. You answer strictly in the requested JSON form and nothing else.
+
+\smallskip
+\textit{User message.} A billing ICD code on this hospital admission asserts the patient has: \texttt{\{desc\}}. Below are excerpts from the discharge summary. The narrative sections written during the hospital course were deliberately withheld; judge only from what is here. \texttt{--- BEGIN EXCERPTS --- \{evidence\} --- END EXCERPTS ---} Decide whether these excerpts document the condition above. ``SUPPORTED'': the excerpts affirmatively state or unambiguously document the condition (e.g. it is named in a problem list, past medical history, or discharge diagnosis). ``REFUTED'': the excerpts address this clinical area and are inconsistent with the condition. ``INSUFFICIENT'': the excerpts simply never speak to the condition either way. Do not guess. Absence of any mention is ``INSUFFICIENT'', not ``REFUTED''. Reply with ONLY this JSON object: \texttt{\{"verdict": "SUPPORTED" | "REFUTED" | "INSUFFICIENT", "confidence": <float 0.0-1.0>, "evidence\_quote": "<short verbatim quote from the excerpts, or empty string>", "reason": "<one sentence>"\}}
+\end{quote}
+
+Only SUPPORTED counted toward confirmation; REFUTED and INSUFFICIENT were treated alike. REFUTED was rare (0.5\% of Qwen3.5-27B verdicts; Table~\ref{tab:s_llm_models}), so in practice the task was binary.
+
+Five open-weight instruction-tuned models were run locally, and no text left the secure computing environment, as required by the PhysioNet data use agreement (Table~\ref{tab:s_llm_versions}). Inference used vLLM 0.26.0 for offline batched inference (PyTorch 2.11.0, CUDA 12.9) on one NVIDIA A100 80 GB GPU per job, with model weights in their native precision and no quantization. Decoding was greedy (temperature 0, random seed 0) and constrained to a JSON schema requiring the four fields above, with the verdict restricted to the three labels. The maximum number of new tokens was 200, or 1,024 for gpt-oss-20b, whose reasoning tokens share the output budget; its verdict was read from the final output channel. Reasoning mode was disabled for Qwen3.5-27B, and gpt-oss-20b used its default reasoning with the vLLM gpt-oss reasoning parser. The context window was 8,192 tokens (6,144 for Gemma-4-31B; some early Qwen3.5-27B and GLM-4-32B batches used 4,096). No prompt exceeded its model's context window, so no pair was skipped or truncated by the context limit.
+
+\begin{table}[H]
+\caption{LLMs used for verification}
+\label{tab:s_llm_versions}
+\centering
+\scriptsize
+\begin{tabular}{@{}lll@{}}
+\toprule
+Model & Hugging Face identifier & Revision \\
+\midrule
+Qwen3.5-27B & Qwen/Qwen3.5-27B & \texttt{fc05daec18b0a78c049392ed2e771dde82bdf654} \\
+GLM-4-32B & zai-org/GLM-4-32B-0414 & \texttt{077b5c2f5c43bd3239fd605a0600229e8facbd4a} \\
+Mistral-24B & mistralai/Mistral-Small-3.2-24B-Instruct-2506 & \texttt{95a6d26c4bfb886c58daf9d3f7332c857cb27b43} \\
+gpt-oss-20b & openai/gpt-oss-20b & \texttt{6cee5e81ee83917806bbde320786a8fb61efebee} \\
+Gemma-4-31B & google/gemma-4-31B-it & \texttt{842da3794eaa0b77d5f08bae87a17459d91ff475} \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\item Model names in the first column are those used in Tables S16--S22. LLM, large language model.
+\end{tablenotes}
+\end{table}
+
+A pair was confirmed only if all five models returned SUPPORTED, and 124,308 of the 164,770 pairs (75.4\%) were confirmed. The primary disparity models in the main text use these confirmed cohorts; Table~\ref{tab:s_llm_layer3} compares them with the unverified code-based cohorts and with a majority threshold of at least three SUPPORTED votes. Charlson scores were computed from all recorded diagnosis codes, including codes for conditions that the models did not confirm.
 
 \end{document}
