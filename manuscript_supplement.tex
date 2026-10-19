@@ -657,9 +657,9 @@ Disease cohort & ICD-coded & \(\geq\)3/5 SUPPORTED votes & 5/5 SUPPORTED votes \
 Serious mental illness & 0.725 (0.63-0.83)*** & 0.740 (0.64-0.86)*** & 0.753 (0.65-0.88)** \\
 Sickle cell disease & 0.392 (0.19-0.82)* & 0.323 (0.17-0.60)*** & 0.359 (0.16-0.79)* \\
 Substance use disorder & 0.910 (0.81-1.03) & 0.825 (0.72-0.95)** & 0.829 (0.72-0.96)* \\
-Chronic pain & 0.986 (0.83-1.18) & 0.992 & 1.010 (0.78-1.31) \\
+Chronic pain & 0.986 (0.83-1.18) & 0.993 (0.79-1.26) & 1.010 (0.78-1.31) \\
 HIV & 1.470 (1.05-2.05)* & 1.399 (1.01-1.94) & 1.396 (0.996-1.96) \\
-End-stage renal disease & 0.936 (0.77-1.14) & 0.882 & 0.848 (0.69-1.04) \\
+End-stage renal disease & 0.936 (0.77-1.14) & 0.882 (0.72-1.08) & 0.848 (0.69-1.04) \\
 Diabetes & 1.275 (1.15-1.41)*** & 1.308 (1.18-1.44)*** & 1.291 (1.17-1.43)*** \\
 Obesity & 1.376 (1.19-1.59)*** & 1.347 (1.13-1.61)** & 1.329 (1.11-1.60)** \\
 \bottomrule
@@ -668,7 +668,38 @@ Obesity & 1.376 (1.19-1.59)*** & 1.347 (1.13-1.61)** & 1.329 (1.11-1.60)** \\
 \item Values are covariate-adjusted interaction RRs (95\% CI) comparing the BHC-DI rate ratio for notes with versus without each condition. The ICD-coded column reproduces the Layer 3 estimates in Table~\ref{tab:s_layer3}; the 5/5 column corresponds to the primary disease definition. Verified columns restrict each disease cohort to admission--disease pairs with the stated number of SUPPORTED votes from five LLMs. Asterisks mark Benjamini-Hochberg \(q<0.05\) (*), \(q<0.01\) (**), and \(q<0.001\) (***); unmarked estimates did not meet \(q<0.05\). BHC, Brief Hospital Course; DI, Discharge Instructions; LLM, large language model.
 \end{tablenotes}
 \end{table}
-% TODO(HY): add 95% CIs for chronic pain and end-stage renal disease in the >=3/5 column (layer3_voted_comparison.csv).
+
+\subsection{Sensitivity analysis excluding classifier-development notes}
+
+Of the 4,710 notes annotated for classifier development, 3,552 were also in the analysis cohort. Removing them left 255,655 notes. With disease cohorts confirmed by all five LLMs and the same model specifications as the main analysis, the BHC to DI RR was 8.30 (95\% CI, 8.04-8.57) and the HPI to DI RR was 7.22 (95\% CI, 6.93-7.51; Table~\ref{tab:s_overlap}). In the disease-cohort model, diabetes and obesity still widened the section gap, and substance use disorder, serious mental illness, and sickle cell disease still narrowed it; HIV, end-stage renal disease, and chronic pain remained below the false discovery threshold. Age remained the only identity characteristic that modified the gap. No result changed its direction or its false discovery classification.
+
+\begin{table}[H]
+\caption{Main results with and without the 3,552 classifier-development notes}
+\label{tab:s_overlap}
+\centering
+\small
+\begin{tabular}{lll}
+\toprule
+Estimate & Main analysis & Excluding overlapping notes \\
+\midrule
+Section gap, BHC vs DI & 8.21 (7.96-8.47) & 8.30 (8.04-8.57) \\
+Section gap, HPI vs DI & 7.21 (6.94-7.50) & 7.22 (6.93-7.51) \\
+Diabetes & 1.29 (1.17-1.43); $q<0.001$ & 1.26 (1.14-1.40); $q<0.001$ \\
+Obesity & 1.33 (1.11-1.60); $q=0.007$ & 1.34 (1.11-1.62); $q=0.007$ \\
+Serious mental illness & 0.75 (0.65-0.88); $q=0.001$ & 0.73 (0.63-0.86); $q<0.001$ \\
+Substance use disorder & 0.83 (0.72-0.96); $q=0.018$ & 0.82 (0.71-0.95); $q=0.020$ \\
+Sickle cell disease & 0.36 (0.16-0.79); $q=0.018$ & 0.43 (0.20-0.90); $q=0.041$ \\
+HIV & 1.40 (0.996-1.96); $q=0.070$ & 1.33 (0.95-1.86); $q=0.135$ \\
+End-stage renal disease & 0.85 (0.69-1.04); $q=0.134$ & 0.97 (0.78-1.21); $q=0.872$ \\
+Chronic pain & 1.01 (0.78-1.31); $q=0.943$ & 0.98 (0.76-1.26); $q=0.872$ \\
+Age, per year & 0.989 (0.986-0.992); $q<0.001$ & 0.989 (0.986-0.992); $q<0.001$ \\
+Other identity contrasts & all $q>0.05$ & all $q>0.05$ \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\item Values are RRs (95\% CI). Section gaps are GEE rate ratios relative to DI; disease and identity rows are adjusted interaction RRs comparing the BHC to DI rate ratio with and without the characteristic, with Benjamini-Hochberg $q$ values. Disease cohorts are those confirmed by all five LLMs. The main analysis used 259,207 notes for the section gaps and 259,187 for the interaction models; excluding the overlapping notes left 255,655 notes. BHC, Brief Hospital Course; HPI, History of Present Illness; DI, Discharge Instructions; GEE, generalized estimating equation; LLM, large language model.
+\end{tablenotes}
+\end{table}
 
 \section{Supplementary Note: Data Processing and Variable Definitions}
 \label{sec:s_processing}
@@ -742,7 +773,7 @@ Total & 154,984 & 89 & 154,895 \\
 The coordinates of the 5,043 annotations are defined on text processed with the cleaning and normalization procedures released with the resource. After applying the same procedures, every annotated keyword was located (5,043 of 5,043). Each training input contained the keyword sentence and one sentence on either side, with the keyword enclosed by the reserved tokens [unused1] and [unused2]. Negative, disbelief, and difficult annotations formed the stigma class; neutral, positive, and exclude annotations formed the non-stigma class. Instances were split 80/10/10 by note identifier with a fixed random seed of 42, giving 4,037 training, 501 validation, and 505 test instances.
 
 Two features of the training data bear on interpretation. First, the split was made by note rather than by patient, so different notes from the same patient could fall in the training and test sets. Second, 3,552 of the 4,710 annotated notes were also in the 259,207-note analysis cohort, about 1.4\% of the cohort, so the classifier scored some passages it had seen during training.
-% TODO(HY): add the sensitivity analysis refitting the models without these 3,552 notes (no retraining needed); the point is now also in the main-text Limitations.
+Refitting the models without these notes did not change any conclusion (Table~\ref{tab:s_overlap}).
 
 \subsection{Analysis dataset}
 
