@@ -64,9 +64,9 @@ We therefore compared stigmatizing language in patient-facing DI and clinician-f
 \section{Materials and Methods}
 
 \subsection{Overall Pipeline}
-The study has three parts (Figure~\ref{fig:framework}). For each discharge summary, a classifier examined every sentence containing a term from a stigma lexicon and labeled it as stigmatizing or non-stigmatizing. The stigmatizing labels were counted separately for each section, and these section-level counts were the study outcome. In parallel, large language models (LLMs) audited the patient cohorts defined by diagnosis codes, checking whether each coded condition was supported by the clinical record. The section counts and cohort membership then entered two statistical models, which estimated how much stigmatizing language differed between sections and whether that difference varied across patient groups.
+The study has three parts, labeled A to C in Figure~\ref{fig:framework}. For each discharge summary, a classifier examined every sentence containing a term from a stigma lexicon and labeled it as stigmatizing or non-stigmatizing. The stigmatizing labels were counted separately for each section, and these section-level counts were the study outcome. In parallel, large language models (LLMs) audited the patient cohorts defined by diagnosis codes, checking whether each coded condition was supported by the clinical record. The section counts and cohort membership then entered two statistical models, which estimated how much stigmatizing language differed between sections and whether that difference varied across patient groups.
 
-The first part measures stigmatizing language. The same classifier is applied to every section, so clinician-facing and patient-facing text are judged by one standard, and its labels are summed within each section of each note. The second part defines the patient groups to be compared. Identity groups come from demographic and administrative records, disease cohorts come from diagnosis codes, and the LLM audit checks that these disease labels reflect what the note documents; only conditions confirmed by all five models enter the disparity models. The third part compares sections and groups. The first model estimates the overall gap between clinician-facing and patient-facing sections, and the second tests whether that gap is wider or narrower for particular patient groups. Each part is described in the subsections that follow.
+Part A measures stigmatizing language. The same classifier is applied to every section, so clinician-facing and patient-facing text are judged by one standard, and its labels are summed within each section of each note. Part B defines the sections and patient groups to be compared. Identity groups come from demographic and administrative records, disease cohorts come from diagnosis codes, and the LLM audit checks that these disease labels reflect what the note documents; only conditions confirmed by all five models enter the disease models. Part C compares sections and groups. Model 1 estimates the overall gap between clinician-facing and patient-facing sections, and Model 2 tests whether that gap is wider or narrower for particular patient groups. After the data sources, each part is described in turn.
 
 \begin{figure*}[!t]
 \centering
@@ -82,13 +82,19 @@ The first part measures stigmatizing language. The same classifier is applied to
 
 We split each summary into sections at curated headers appearing at the start of a line, separating clinician-facing sections (BHC, HPI) from patient-facing text (DI). Of 331,793 summaries, 290,005 contained both a BHC and a DI section. We excluded notes in which either section contained fewer than 50 words, yielding a primary analytic cohort of 259,207 notes with paired BHC and DI sections. HPI was available in 252,581 of these notes and served as a secondary clinician-facing comparison. The admission records of 20 of these notes, present in MIMIC-IV version 2.2, have been removed from version 3.1; these notes could not be linked to patient data and were excluded from the group analyses, leaving 259,187 notes from 125,271 patients. 
 
-\paragraph{Disease cohorts and LLM audit}
-Eight disease cohorts were defined from the ICD-9 and ICD-10 diagnosis codes recorded for each admission; an admission belonged to a cohort when any of its codes matched the cohort's code list (Supplementary Table S26). To check these code-based labels against the clinical record, five open-weight LLMs judged whether each admission--disease pair was supported by the past medical history, chief complaint, diagnoses, results, examination, and medications. BHC, DI, HPI, and Social History were withheld from this step so that the audit did not draw on the sections in which stigmatizing language was measured, and the ICD codes were not shown to the models. An admission was treated as a case for a condition only if all five models returned SUPPORTED for that admission--disease pair; REFUTED, INSUFFICIENT, and unparseable responses did not count as support. The 40,462 pairs with fewer than five SUPPORTED votes were reclassified as not having the condition rather than excluded, so that each admission continued to contribute to the comparisons for the other conditions. These included 648 pairs in which at least one model returned an unparseable response, 171 of which were supported by every model that responded. Agreement among the models and the effect of the vote threshold are reported in Supplementary Tables S16--S22.
-
 \paragraph{Classifier training data}
 Training data came from the labeled corpus released by Harrigian and colleagues.\cite{harrigian2023} The corpus contains 5,043 annotated instances, each consisting of a sentence that contains a stigma-relevant keyword and one sentence of context on either side. The keywords come from a curated lexicon of 89 terms organized into three families: Credibility \& Obstinacy, Compliance, and Descriptors. Each instance was annotated for the type of language use it reflected, and we collapsed these annotations into two categories, stigmatizing and non-stigmatizing, using the mapping described in the Supplementary Methods. 
 
-\subsection{Section roles}
+\subsection{A. Stigma classifier}
+\td{before the details below, it would be good to explain how it is achieved overall. You train each classifier for the patient-facing and clinician-facing sections, and then compare the ratios or sth. Then you can give the details on how you train it.  }
+
+We trained a binary classifier that takes a sentence as input and labels it as stigmatizing or non-stigmatizing. Following the design of the Harrigian annotation resource,\cite{harrigian2023} each input sentence contains one keyword from the 89-term stigma lexicon and is expanded with one sentence of context on either side, with the keyword marked. We used this classifier to label the keyword-containing sentences in the clinician-facing sections (BHC and HPI) and the patient-facing section (DI) of every discharge summary in the analysis cohort.
+
+To train the classifier, we fine-tuned 12 pretrained language-model encoders on the Harrigian annotations, split by note into training, validation, and test sets of 4,037, 501, and 505 instances. GatorTron-base\cite{yang2022} achieved the highest validation macro-F1 and was selected; the full training configuration and the performance of all 12 models are reported in the Supplementary Methods and Supplementary Table S1. The result is a single sentence-level classifier, which we used to decide whether each keyword sentence in each section was stigmatizing or non-stigmatizing.
+
+\subsection{B. Sections and disease cohorts}
+
+\subsubsection{Section roles}
 For this analysis, DI was treated as patient-facing and all other discharge-summary sections as clinician-facing. Section comparisons used BHC as the primary and HPI as the secondary clinician-facing section (Table~\ref{tab:sections}).
 
 \begin{table}[!t]
@@ -106,16 +112,12 @@ Discharge Instructions & Patient-facing & Explains follow-up, precautions, and s
 \end{tabular}
 \end{table}
 
-\subsection{Stigma classifier}
+\subsubsection{Disease cohorts and LLM audit}
+Eight disease cohorts were defined from the ICD-9 and ICD-10 diagnosis codes recorded for each admission; an admission belonged to a cohort when any of its codes matched the cohort's code list (Supplementary Table S26). To check these code-based labels against the clinical record, five open-weight LLMs judged whether each admission--disease pair was supported by the past medical history, chief complaint, diagnoses, results, examination, and medications. BHC, DI, HPI, and Social History were withheld from this step so that the audit did not draw on the sections in which stigmatizing language was measured, and the ICD codes were not shown to the models. An admission was treated as a case for a condition only if all five models returned SUPPORTED for that admission--disease pair; REFUTED, INSUFFICIENT, and unparseable responses did not count as support. The 40,462 pairs with fewer than five SUPPORTED votes were reclassified as not having the condition rather than excluded, so that each admission continued to contribute to the comparisons for the other conditions. These included 648 pairs in which at least one model returned an unparseable response, 171 of which were supported by every model that responded. Agreement among the models and the effect of the vote threshold are reported in Supplementary Tables S16--S22.
 
-\td{before the details below, it would be good to explain how it is achieved overall. You train each classifier for the patient-facing and clinician-facing sections, and then compare the ratios or sth. Then you can give the details on how you train it.  }
+\subsection{C. Statistical models}
 
-We trained a binary classifier that takes a sentence as input and labels it as stigmatizing or non-stigmatizing. Following the design of the Harrigian annotation resource,\cite{harrigian2023} each input sentence contains one keyword from the 89-term stigma lexicon and is expanded with one sentence of context on either side, with the keyword marked. We used this classifier to label the keyword-containing sentences in the clinician-facing sections (BHC and HPI) and the patient-facing section (DI) of every discharge summary in the analysis cohort.
-
-To train the classifier, we fine-tuned 12 pretrained language-model encoders on the Harrigian annotations, split by note into training, validation, and test sets of 4,037, 501, and 505 instances. GatorTron-base\cite{yang2022} achieved the highest validation macro-F1 and was selected; the full training configuration and the performance of all 12 models are reported in the Supplementary Methods and Supplementary Table S1. The result is a single sentence-level classifier, which we used to decide whether each keyword sentence in each section was stigmatizing or non-stigmatizing.
-
-\subsection{Section comparison}
-
+\subsubsection{Model 1: section comparison}
 To compare how much stigmatizing language each section contains, we counted, in every section of every note, the sentences that the classifier described above labeled stigmatizing; each such sentence is one stigmatizing-language event. We modeled these counts with generalized estimating equations (GEE)\td{full name?}, a form of Poisson regression for counts that allows observations from the same unit to be correlated.\cite{zeger1986} The unit was the note, because the BHC, HPI, and DI sections of one summary describe the same patient and admission.\td{too many tech terms which are not easy to understand, specifically why those are also not mentioned. It is not a 'section model', but a logistic regression model or mixed effect model (which readers most likely have the knowledge about) for each section?} The model was
 \[
 \log E(Y_{is})=\log(T_{is})+\beta_0+\beta_1BHC_s+\beta_2HPI_s,
@@ -124,21 +126,7 @@ To compare how much stigmatizing language each section contains, we counted, in 
 
 To check that the result did not depend on the classifier, we refitted the model with a GatorTron classifier that uses a word-based context window (Word10) and with 10 alternative sentence-window encoders with test accuracy above 0.90, and we checked the direction of the difference with paired Wilcoxon tests, which do not rely on the Poisson model\td{may needs more clarifications on what these measure}. Full results are reported in the Supplement.
 
-\subsection{Decomposition of the section contrast}
-
-A higher rate in BHC could arise because clinician-facing text contains more keyword anchors (occurrences of lexicon terms), or because anchors there are more often used in a stigmatizing way. To separate these explanations, we decomposed each crude section RR into an anchor-exposure component and a conditional component\td{to do what? why are you doing this analysis?}:
-\[
-\frac{R_A}{R_{DI}} =
-\frac{K_A}{K_{DI}}
-\times
-\frac{R_A/K_A}{R_{DI}/K_{DI}},
-\]
-\td{I am a bit lost from here, as i don;t understand how these analysis related to your key questions. While you are discussing the methods, try to always tie the methods to the question you want to answer. Why this analysis, how this analysis achieves that. }where $A$ is BHC or HPI, $R_s$ is the predicted stigmatizing-language rate, and $K_s$ is the rate of scored keyword anchors in section $s$. The anchor-exposure component $K_A/K_{DI}$ measures how often a section offers a keyword-defined occasion to describe patient behavior. The conditional component compares $P(\mathrm{predicted\ stigma}\mid\mathrm{scored\ anchor})=R_s/K_s$ within a fixed anchor lexicon. In words, the crude section RR equals the relative frequency of scored anchors multiplied by the relative probability that an anchor is classified as stigmatizing. This decomposition is descriptive: it uses exact event, scored-candidate, and word counts and is separate from the adjusted GEE estimates.
-
-Two further descriptive analyses addressed specific alternative explanations. To ask whether DI's lower conditional probability simply reflected a different mix of anchor types, we tabulated scored candidates, events, and Wilson intervals by section and broad anchor family and standardized the conditional probabilities to a common family distribution. To ask how much a whole-note rate, as used in prior studies, depends on section length alone, we summarized each section's share of the words in a note using means, standard deviations, medians, interquartile ranges, and 5th and 95th percentiles. The standardization procedure and the identity linking whole-note and section rates are given in the Supplementary Methods.
-
-\subsection{Identity and disease modification}
-
+\subsubsection{Model 2: disease and identity modification}
 These models ask whether the difference between clinician-facing and patient-facing sections is larger or smaller for particular patient groups, defined by identity characteristics and by disease. For a group indicator $G_i$, the common model was
 \[
 \begin{aligned}
@@ -154,6 +142,18 @@ where $\mathbf Z_i$ contains the adjustment variables. With DI and $G_i=0$ as re
 Here $R$ denotes a model-implied section rate at common covariate values. Values above 1 denote a wider relative section gap; values below 1 denote a narrower gap. Under the model's log-linear age specification, $\exp(\beta_3)$ is the multiplicative change in the BHC to DI RR per additional year. Because this coefficient is a ratio of ratios, we report it alongside absolute BHC and DI rates to show which section drives the difference.
 
 These models used the same Poisson GEE approach as the section comparison, with section word counts as the denominator, but clustered on patient rather than note because a patient could contribute more than one admission and summary\td{what are group models? section-based models are group models?}\td{this section somehow comes a bit sudden and not sure how this links to your method.}. They used an exchangeable working correlation, Pearson scale, and robust covariance. Identity models jointly interacted section with documented race and ethnicity, documented sex, Medicaid status, limited English proficiency, and sample-centered age. White, male, non-Medicaid, and English categories were the respective references. Disease models jointly interacted section with LLM-verified substance use disorder, serious mental illness, sickle cell disease, chronic pain, obesity, HIV, end-stage renal disease, and diabetes, with absence of each condition as the reference. Both model families adjusted for identity, disease indicators, Charlson Comorbidity Index, and log length of stay.\cite{charlson1987,quan2005} Benjamini-Hochberg correction was applied within the nine identity and eight disease interaction families.\cite{benjamini1995} Disease-stratified identity refits and sparse-cell eligibility rules are reported in the Supplement.
+
+\subsubsection{Additional descriptive analysis: decomposition of the section contrast}
+A higher rate in BHC could arise because clinician-facing text contains more keyword anchors (occurrences of lexicon terms), or because anchors there are more often used in a stigmatizing way. To separate these explanations, we decomposed each crude section RR into an anchor-exposure component and a conditional component\td{to do what? why are you doing this analysis?}:
+\[
+\frac{R_A}{R_{DI}} =
+\frac{K_A}{K_{DI}}
+\times
+\frac{R_A/K_A}{R_{DI}/K_{DI}},
+\]
+\td{I am a bit lost from here, as i don;t understand how these analysis related to your key questions. While you are discussing the methods, try to always tie the methods to the question you want to answer. Why this analysis, how this analysis achieves that. }where $A$ is BHC or HPI, $R_s$ is the predicted stigmatizing-language rate, and $K_s$ is the rate of scored keyword anchors in section $s$. The anchor-exposure component $K_A/K_{DI}$ measures how often a section offers a keyword-defined occasion to describe patient behavior. The conditional component compares $P(\mathrm{predicted\ stigma}\mid\mathrm{scored\ anchor})=R_s/K_s$ within a fixed anchor lexicon. In words, the crude section RR equals the relative frequency of scored anchors multiplied by the relative probability that an anchor is classified as stigmatizing. This decomposition is descriptive: it uses exact event, scored-candidate, and word counts and is separate from the adjusted GEE estimates.
+
+Two further descriptive analyses addressed specific alternative explanations. To ask whether DI's lower conditional probability simply reflected a different mix of anchor types, we tabulated scored candidates, events, and Wilson intervals by section and broad anchor family and standardized the conditional probabilities to a common family distribution. To ask how much a whole-note rate, as used in prior studies, depends on section length alone, we summarized each section's share of the words in a note using means, standard deviations, medians, interquartile ranges, and 5th and 95th percentiles. The standardization procedure and the identity linking whole-note and section rates are given in the Supplementary Methods.
 
 
 \section{Results}
