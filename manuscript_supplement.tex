@@ -405,6 +405,45 @@ Chronic pain & 14,751 & 8,569 & 0.887 & 0.105 & 0.986 & 0.828-1.175 & 0.876 & 0.
 \end{tabular}}
 \end{table}
 
+\subsection{Decomposition of the section contrast}
+
+A higher rate in BHC could arise because clinician-facing text contains more keyword anchors (occurrences of lexicon terms), or because anchors there are more often used in a stigmatizing way. To separate these explanations, we decomposed each crude section RR into an anchor-exposure component and a conditional component:
+\[
+\frac{R_A}{R_{DI}} =
+\frac{K_A}{K_{DI}}
+\times
+\frac{R_A/K_A}{R_{DI}/K_{DI}},
+\]
+where $A$ is BHC or HPI, $R_s$ is the predicted stigmatizing-language rate, and $K_s$ is the rate of scored keyword anchors in section $s$. The anchor-exposure component $K_A/K_{DI}$ measures how often a section offers a keyword-defined occasion to describe patient behavior. The conditional component compares $P(\mathrm{predicted\ stigma}\mid\mathrm{scored\ anchor})=R_s/K_s$ within a fixed anchor lexicon. In words, the crude section RR equals the relative frequency of scored anchors multiplied by the relative probability that an anchor is classified as stigmatizing. This decomposition is descriptive: it uses exact event, scored-candidate, and word counts and is separate from the adjusted GEE estimates.
+
+Two further descriptive analyses addressed specific alternative explanations. To ask whether DI's lower conditional probability simply reflected a different mix of anchor types, we tabulated scored candidates, events, and Wilson intervals by section and broad anchor family and standardized the conditional probabilities to a common family distribution. To ask how much a whole-note rate, as used in prior studies, depends on section length alone, we summarized each section's share of the words in a note using means, standard deviations, medians, interquartile ranges, and 5th and 95th percentiles.
+
+\begin{table}[H]
+\caption{Within-note section rates and descriptive decomposition}
+\label{tab:s_decomposition}
+\centering
+\small
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lrrrrrrrr}
+\toprule
+Section & Notes & Anchor rate & Stigma rate & $P$(stigma$\mid$anchor) & Crude RR vs DI & Anchor exposure & Conditional & GEE RR vs DI (95\% CI) \\
+\midrule
+BHC & 259,207 & 1.005 & 0.640 & 0.637 & 10.08 & 6.55 & 1.54 & 8.210 (7.963-8.465) \\
+HPI & 252,581 & 0.765 & 0.490 & 0.641 & 7.72 & 4.98 & 1.55 & 7.212 (6.937-7.497) \\
+DI & 259,207 & 0.153 & 0.064 & 0.414 & 1.00 & 1.00 & 1.00 & Reference \\
+\bottomrule
+\end{tabular}}
+\begin{tablenotes}
+\item Rates are events per 1,000 words. Anchor rates include the 154,895 scored anchors. The decomposition uses exact counts and satisfies crude RR = anchor exposure $\times$ conditional before presentation rounding. GEE RRs are from paired Poisson GEE models with a word-count offset and no covariates. BHC, Brief Hospital Course; HPI, History of Present Illness; DI, Discharge Instructions; GEE, generalized estimating equation; RR, rate ratio.
+\end{tablenotes}
+\end{table}
+
+Successfully scored keyword anchors occurred at rates of 1.005 in BHC, 0.765 in HPI, and 0.153 in DI. The crude BHC to DI RR of 10.08 equaled a 6.55-fold anchor-exposure component multiplied by a 1.54-fold conditional component (10.08 = 6.55 $\times$ 1.54; Table~\ref{tab:s_decomposition}). Put simply, BHC contained 6.55 times as many keyword anchors per word as DI, and each anchor in BHC was 1.54 times as likely to be classified as stigmatizing. For HPI versus DI, the crude RR was 7.72 = 4.98 $\times$ 1.55. The corresponding conditional probabilities were 0.637 in BHC, 0.641 in HPI, and 0.414 in DI (descriptive 95\% Wilson intervals, 0.634-0.640, 0.637-0.646, and 0.404-0.424; inference for section contrasts comes from the paired GEE). BHC and HPI differed in anchor exposure but had similar conditional point estimates, whereas DI had a lower conditional probability within the anchor lexicon.
+
+Because whole-note rates are word-weighted averages, unequal section lengths change the aggregate even when section-specific rates stay fixed. BHC supplied 64.0\% of combined BHC-DI words in the paired corpus. At the observed section rates, this mix yielded 0.433 stigmatizing-language events per 1,000 words. Equal BHC and DI word weights yielded 0.352, making the observed-mix value 23.0\% higher. Across individual notes, the median BHC share of BHC-plus-DI words was 67.6\% (interquartile range, 51.3\%-77.5\%; Table~\ref{tab:s_section_shares}).
+
+Anchor-family classification also differed by section (Tables~\ref{tab:s_families} and~\ref{tab:s_family_standardization}). After direct standardization to a pooled broad-family distribution, the BHC-DI conditional ratio decreased from 1.54 to 1.48 and the HPI-DI ratio from 1.55 to 1.44. Broad-family composition accounted for 6.0\% of the HPI-DI conditional probability difference and slightly masked the BHC-DI difference; most of each difference remained within the three families.
+
 \begin{table}[H]
 \caption{Scored candidates and stigmatizing-language events by anchor family and section}
 \label{tab:s_families}
@@ -915,7 +954,7 @@ Gemma-4-31B & google/gemma-4-31B-it & \texttt{842da3794eaa0b77d5f08bae87a17459d9
 \bottomrule
 \end{tabular}
 \begin{tablenotes}
-\item Model names in the first column are those used in Tables S16--S22. LLM, large language model.
+\item Model names in the first column are those used in Tables S17--S23. LLM, large language model.
 \end{tablenotes}
 \end{table}
 
