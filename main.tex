@@ -123,8 +123,7 @@ We trained the classifier on the labeled corpus released by Harrigian et al.,\ci
 
 % Classifier training data came from the labeled corpus released by Harrigian and colleagues.\cite{harrigian2023} The corpus contains 5,043 annotated instances, each consisting of a sentence that contains a stigma-relevant keyword and one sentence of context on either side. The keywords come from a curated lexicon of 89 keywords organized into three families: Credibility \& Obstinacy, Compliance, and Descriptors. Each instance was annotated for the type of language use it reflected, and we collapsed these annotations into two categories, stigmatizing and non-stigmatizing, using the mapping described in the Supplementary Methods. 
 
-\td{remove part a-c which is less common in these venues? Just using the title should be fine.  }
-\subsection{Part A. Stigma classifier}
+\subsection{Stigma classifier}
 We trained a binary classifier to label stigmatizing language %that takes a sentence as input and labels it 
 as stigmatizing or non-stigmatizing at the sentence level. Following the design of the Harrigian annotation resource,\cite{harrigian2023} each input sentence contains one keyword, plus one sentence of context on either side, with the keyword marked so the classifier could judge whether it was used in a stigmatizing way. Context sentences were included because the same keyword can be stigmatizing or neutral depending on usage.  %from the 89-keyword stigma lexicon and is expanded with one sentence of context on either side, with the keyword marked. 
 %We used this classifier to label the keyword-containing sentences in the clinician-facing sections (BHC and HPI) and the patient-facing section (DI) of every discharge summary in the analysis cohort.
@@ -137,7 +136,7 @@ to label the full discharge summaries, the full training configuration and the p
 \hy{It includes both part, but it is a quite bias datasets, since clinician-facing sections normally much longer than patient facing.}
 \td{For this dataset, does the note include both the patient-facing and clinician-facing notes? If they only have clinician-facing notes, could a classifier trained on this bias our predictions for patient-facing results because of domain shift? If containing both, we may mention this briefly; if not, we may need to validate it somehow or maybe discuss this?}
 
-\subsection{Part B. Disease cohorts and LLM verification}
+\subsection{Disease cohorts and LLM verification}
 Eight disease cohorts (substance use disorder, serious mental illness, sickle cell disease, chronic pain, obesity, HIV, end-stage renal disease, and diabetes)
 %\td{give them in main text as well, either list them here or make a small table?} 
 were defined from the ICD-9 and ICD-10 diagnosis codes recorded for each admission, an admission belonged to a cohort when any of its codes matched the cohort's code list (Supplementary Table S27). Because diagnosis codes in MIMIC are recorded primarily for billing and may not reflect the clinical record,\cite{omalley2005, shivade2014} we verified each code-based assignment using large language models (LLMs).
@@ -153,7 +152,7 @@ Admissions with fewer than five SUPPORTED votes were reclassified as not having 
 %\td{do you mean we excluded these from comparisons for that condition only; they were retained in the entire cohort analyses?} %% Yes
 These included 648 pairs in which at least one model returned an unparseable response, 171 of which were supported by every model that responded.\td{Do we need these details in 171, 648? The important thing should be how many cases are left for each disease? Like, resulting in xx for xx, xx for HIV, xx for SU, xx } Agreement among the models and the effect of the vote threshold are reported in Supplementary Tables S17--S23.
 
-\subsection{C. Statistical models}
+\subsection{Statistical models}
 %\td{we need to first let readers know what analysis we want to do, to investigate what, before diving into the details. Something like: We conducted two analyses. The first compared the rate of stigmatizing language between clinician-facing sections (BHC and HPI) and patient-facing DI. The second examined whether the difference between clinician-facing and patient-facing sections varied across patient groups defined by disease and identity characteristics. For both, classifier labels were aggregated into counts of stigmatizing sentences per section, and between-section differences were estimated using generalized estimating equations (GEE) [ref] which account for correlation among sections of the same summary and summaries from the same patient.}
 
 We conducted two primary statistical analyses. The first compared the rate of stigmatizing language between clinician-facing sections (BHC and HPI) and patient-facing DI across all paired discharge summaries. The second examined whether the relative difference between clinician-facing and patient-facing sections varied across patient groups defined by LLM-verified disease cohorts and identity characteristics. For both analyses, classifier predictions were aggregated into counts of stigmatizing sentences per section, and between-section differences were estimated using Poisson generalized estimating equations (GEE).\cite{zeger1986}
