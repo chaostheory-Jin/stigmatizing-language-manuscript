@@ -24,9 +24,11 @@
 \appnotes{Research and Applications}
 
 \title[Stigmatizing language by intended audience]{Comparing Stigmatizing Language in Clinician-Facing and Patient-Facing Sections of Clinical Notes}
-\author[1,$\ast$]{Author names and degrees required}
-\address[1]{Author input required: department, institution, city, and country for every author.}
-\corresp[$\ast$]{Author input required: corresponding author postal address, email, and telephone. Main text word count: xxxx TODO.}
+\author[1]{Hongyu Jin}
+\author[1]{Mike Conway, PhD}
+\author[1,$\ast$]{Ting Dang, PhD}
+\address[1]{School of Computing and Information Systems, The University of Melbourne, Parkville, VIC 3010, Australia}
+\corresp[$\ast$]{Corresponding author: Ting Dang, PhD, School of Computing and Information Systems, The University of Melbourne, Parkville, VIC 3010, Australia (Ting.Dang@unimelb.edu.au). First author: Hongyu Jin (hongyuj1@student.unimelb.edu.au). Main text word count: 4,149.}
 
 \abstract{\textbf{Objective:} Stigmatizing language in clinical notes can influence clinicians' judgments and treatment decisions, with potential consequences for patient outcomes. Its use may also depend on whom a section of the note is written for. We aimed to quantify differences in stigmatizing language between clinician-facing and patient-facing sections and to examine how these differences varied across patient cohorts.\\
 \textbf{Materials and Methods:} We analyzed 259,207 discharge summaries from MIMIC-IV-Note, extracting the clinician-facing Brief Hospital Course (BHC) and History of Present Illness (HPI) sections and the patient-facing Discharge Instructions (DI) section. A fine-tuned language-model classifier labeled keyword-containing sentences as stigmatizing or non-stigmatizing. Disease cohorts defined by diagnosis codes were verified by five large language models (LLMs), and only conditions verified by all five were analyzed. Poisson generalized estimating equation models compared rates of stigmatizing language across sections and examined whether the differences varied across patient cohorts.\\
@@ -66,7 +68,8 @@ cannot show whether stigmatizing language differs between clinician-facing and p
 We therefore compared stigmatizing language in patient-facing DI and clinician-facing BHC and HPI within 259,207 discharge summaries from MIMIC-IV-Note.\cite{mimicnote2023,mimiciv2024} Using a fine-tuned clinical language model classifier to identify stigmatizing language,
 %\td{Using xxxx, or we develop a BERT-based classifier to identify stigmatizing language, and first quantify? provide a bit information of the method? }
 we first quantified the overall difference in stigmatizing language between sections. We then examined whether demographic characteristics and disease status %, using diagnosis-code cohorts verified by large language models, 
-were associated with the absolute prevalence in patient-facing DI and with the relative gap between clinician-facing and patient-facing sections.\td{which one fit better here? 'By examining how stigmatizing language varies with the intended audience of clinical documentation, this study aims to inform documentation practices, clinician training, and the development of tools that detect stigmatizing language or generate patient-facing text.' or maybe 'Our goal is to identify where and for whom patients are most likely to encounter stigmatizing language in their discharge documentation, and thereby guide targeted efforts to make patient-facing communication more respectful.' This might depend on the discussion angle we take?}
+were associated with the absolute prevalence in patient-facing DI and with the relative gap between clinician-facing and patient-facing sections. Our goal was to identify where and for whom patients are most likely to encounter stigmatizing language in their discharge documentation, and thereby guide targeted efforts to make patient-facing communication more respectful.
+%\td{which one fit better here? 'By examining how stigmatizing language varies with the intended audience of clinical documentation, this study aims to inform documentation practices, clinician training, and the development of tools that detect stigmatizing language or generate patient-facing text.' or maybe 'Our goal is to identify where and for whom patients are most likely to encounter stigmatizing language in their discharge documentation, and thereby guide targeted efforts to make patient-facing communication more respectful.' This might depend on the discussion angle we take?}
 
 \section{Materials and Methods}
 
@@ -82,7 +85,7 @@ Third, we conducted statistical analyses to quantify overall differences in stig
 \begin{figure*}[!t]
 \centering
 \includegraphics[width=\textwidth]{figure1_framework.png}
-\caption{Study framework. (A) Keywords from an 89-keyword lexicon are scored in sentence-window context by a binary GatorTron-base classifier (test macro-F1, 0.93), the same model scores every section. (B) Stigmatizing-language events are counted for each note and section in clinician-facing BHC and patient-facing DI. Each ICD-coded admission--disease pair is checked by five open-weight LLMs, which judge whether the note documents the disease, the models read past medical history, chief complaint, diagnosis, results, examination, and medication text, and are not shown BHC, DI, HPI, Social History, or the ICD code itself. Only pairs that all five models label SUPPORTED enter Model 2 (124,308 of 164,770 pairs, 75.4\%), REFUTED and INSUFFICIENT verdicts are coded as absent. (C) Model 1 estimates the BHC vs DI rate ratio (RR) with a Poisson GEE clustered by note. Model 2 tests whether that RR differs by patient group, using disease cohorts verified by all five LLMs and adjusting for race and ethnicity, sex, insurance, limited English proficiency, age, and severity, with clustering by patient. BHC, Brief Hospital Course, DI, Discharge Instructions, GEE, generalized estimating equation, ICD, International Classification of Diseases, LLM, large language model.}
+\caption{Study framework. (A) Keywords from an 89-keyword lexicon are scored in sentence-window context by a binary GatorTron-base classifier (test macro-F1, 0.93), the same model scores every section. (B) Stigmatizing sentences are counted for each note and section in clinician-facing BHC and patient-facing DI. Each ICD-coded admission--disease pair is checked by five open-weight LLMs, which judge whether the note documents the disease, the models read past medical history, chief complaint, diagnosis, results, examination, and medication text, and are not shown BHC, DI, HPI, Social History, or the ICD code itself. Only pairs that all five models label SUPPORTED enter Model 2 (124,308 of 164,770 pairs, 75.4\%), REFUTED and INSUFFICIENT verdicts are coded as absent. (C) Model 1 estimates the BHC vs DI rate ratio (RR) with a Poisson GEE clustered by note. Model 2 tests whether that RR differs by patient group, using disease cohorts verified by all five LLMs and adjusting for race and ethnicity, sex, insurance, limited English proficiency, age, and severity, with clustering by patient. BHC, Brief Hospital Course, DI, Discharge Instructions, GEE, generalized estimating equation, ICD, International Classification of Diseases, LLM, large language model.}
 \visiblealt{Three-panel schematic. Panel A traces a keyword through its sentence context to a GatorTron-base classifier with stigma and non-stigma outputs. Panel B shows example BHC and DI text from one discharge summary, and below it an ICD code and its note passing to five LLMs that judge whether the note documents the disease, with supported, refuted, and insufficient outcomes, only unanimous support enters Model 2. Panel C shows Model 1, with a much taller BHC bar than DI bar, and Model 2, with interaction RRs that widen the gap for obesity and diabetes and narrow it for substance use disorder, serious mental illness, and sickle cell disease.}
 \label{fig:framework}
 \end{figure*}
@@ -211,7 +214,7 @@ For the section analysis, the BHC versus DI RR was 8.21 (95\% CI, 7.96-8.47, $P<
 \centering
 \includegraphics[width=0.95\linewidth]{figure2_section_rates.png}
 \caption{Stigmatizing-language rates by section. Bars show stigmatizing sentences per 1,000 words in clinician-facing BHC and HPI and patient-facing DI, respectively. Brackets give the between-section RRs relative to DI with 95\% CIs estimated from the GEE model. Abbreviations: BHC, Brief Hospital Course. DI, Discharge Instructions. GEE, generalized estimating equation. HPI, History of Present Illness. RR, rate ratio.}
-\visiblealt{Bar chart with three bars. BHC has 0.640 stigmatizing-language events per 1,000 words, HPI 0.490, and DI 0.064. Brackets above the bars show RR 8.21 (7.96 to 8.47) for BHC vs DI and RR 7.21 (6.94 to 7.50) for HPI vs DI.}
+\visiblealt{Bar chart with three bars. BHC has 0.640 stigmatizing sentences per 1,000 words, HPI 0.490, and DI 0.064. Brackets above the bars show RR 8.21 (7.96 to 8.47) for BHC vs DI and RR 7.21 (6.94 to 7.50) for HPI vs DI.}
 \label{fig:sections}
 \end{figure}
 
@@ -234,7 +237,7 @@ Among identity characteristics, only age modified the between-section gap: the B
 \resizebox{0.96\linewidth}{!}{%
 \begin{tabular}{@{}lrrrrrrrll@{}}
 \toprule
-Disease cohort & Notes (\% of ICD-coded) & BHC events & BHC rate & BHC/overall & DI events & DI rate & DI/overall & Interaction RR (95\% CI) & BH $q$ \\
+Disease cohort & Notes (\% of ICD-coded) & BHC stigmatizing sentences & BHC rate & BHC/overall & DI stigmatizing sentences & DI rate & DI/overall & Interaction RR (95\% CI) & BH $q$ \\
 \midrule
 Sickle cell disease & 377 (90.0) & 183 & 1.191 & 1.86 & 16 & 0.277 & 4.3 & 0.359 (0.16-0.79) & 0.018 \\
 Serious mental illness & 8,688 (75.0) & 7,706 & 1.820 & 2.84 & 328 & 0.218 & 3.4 & 0.753 (0.65-0.88) & 0.001 \\
@@ -247,7 +250,7 @@ Obesity & 16,848 (61.0) & 4,337 & 0.630 & 0.98 & 174 & 0.045 & 0.7 & 1.329 (1.11
 \bottomrule
 \end{tabular}}
 \begin{tablenotes}
-\item Cohorts include only admission--disease pairs verified by all five LLMs, the percentage gives the share of ICD-coded notes retained. Rates are crude stigmatizing-language events per 1,000 words among notes in each disease cohort. BHC/overall and DI/overall divide the displayed cohort rates by the rounded all-note BHC rate of 0.640 or DI rate of 0.064. The interaction RR, which is covariate-adjusted, instead compares the BHC vs DI RR for notes with versus without the condition, values greater than 1 indicate a wider relative section gap for the cohort. These columns therefore report related but distinct comparisons. BHC, Brief Hospital Course, DI, Discharge Instructions, BH, Benjamini-Hochberg, LLM, large language model.
+\item Cohorts include only admission--disease pairs verified by all five LLMs, the percentage gives the share of ICD-coded notes retained. Rates are crude stigmatizing sentences per 1,000 words among notes in each disease cohort. BHC/overall and DI/overall divide the displayed cohort rates by the rounded all-note BHC rate of 0.640 or DI rate of 0.064. The interaction RR, which is covariate-adjusted, instead compares the BHC vs DI RR for notes with versus without the condition, values greater than 1 indicate a wider relative section gap for the cohort. These columns therefore report related but distinct comparisons. BHC, Brief Hospital Course, DI, Discharge Instructions, BH, Benjamini-Hochberg, LLM, large language model.
 \end{tablenotes}
 \end{table*}
 
@@ -258,8 +261,6 @@ Obesity & 16,848 (61.0) & 4,337 & 0.630 & 0.98 & 174 & 0.045 & 0.7 & 1.329 (1.11
 \visiblealt{Three-panel dot plot with one row per disease cohort and a reference row for notes with no listed condition. BHC rates are highest for serious mental illness and substance use disorder. DI rates are highest for sickle cell disease, serious mental illness, and substance use disorder and lowest for obesity. In the right panel, obesity and diabetes have filled red markers above 1, substance use disorder, serious mental illness, and sickle cell disease have filled blue markers below 1 (sickle cell with a wide interval), and HIV, chronic pain, and end-stage renal disease have open markers whose intervals include 1.}
 \label{fig:disease}
 \end{figure*}
-
-Among identity characteristics, only age modified the gap: the BHC vs DI RR became about 1.1\% smaller with each additional year of age (interaction RR, 0.989, 95\% CI, 0.986-0.992, $q<0.001$). No contrast by documented race and ethnicity, sex, Medicaid status, or limited English proficiency met the false discovery threshold (Supplementary Table S5 and Supplementary Figure S1).
 
 \subsection{Classifier performance and sensitivity analyses}
 \label{sec:sensitivity}
@@ -301,7 +302,7 @@ These results also show why the interaction RR should be reported with the absol
 
 \subsection{Implications for informatics practice}
 
-Our findings have three practical implications for clinical documentation audits and natural language processing tools.\cite{himmelstein2022,walker2025,scroggins2025} First, because stigmatizing language occurred more than seven to eight times as often in clinician-facing sections as in patient-facing instructions, documentation-equity audits should report rates by section rather than pooling across the whole note, which confounds section-specific language use with section length. Second, because clinicians used lexicon keywords at different frequencies across sections and the same keyword was more often neutral in DI than in BHC, automated detection and authoring-support tools should evaluate full sentences in context and calibrate thresholds by section rather than flagging isolated keywords. Third, because stigmatizing language in DI appeared in only 1.16\% of notes overall but was three to four times as common in substance use disorder, serious mental illness, and sickle cell disease, quality-improvement reviews of patient-facing instructions should target these high-prevalence cohorts rather than deploying blanket alerts across all discharge summaries.
+Our findings have three practical implications for clinical documentation audits and natural language processing tools.\cite{himmelstein2022,walker2025,scroggins2025} First, because the rate of stigmatizing language in BHC was 8.21 times the rate in DI, documentation-equity audits should report rates by section rather than pooling across the whole note, which confounds section-specific language use with section length. Second, because clinicians used lexicon keywords at different frequencies across sections and the same keyword was more often neutral in DI than in BHC, automated detection and authoring-support tools should evaluate full sentences in context and calibrate thresholds by section rather than flagging isolated keywords. Third, because stigmatizing language in DI appeared in only 1.16\% of notes overall but was three to four times as common in substance use disorder, serious mental illness, and sickle cell disease, quality-improvement reviews of patient-facing instructions should target these high-prevalence cohorts rather than deploying blanket alerts across all discharge summaries.
 % Stigma surveillance dashboards and documentation-equity audits should keep clinician-facing and patient-facing sections separate.\td{Why these two settings (surveillance dashboards/equity audits and authoring support)? They appear without explanation, so the reader cannot tell whether they reflect existing efforts in the literature, are the most important applications, or were chosen arbitrarily.} A whole-note rate cannot show whether stigmatizing language occurred in clinician-facing documentation or in patient-facing DI, and it mixes the language within sections with section length. A practical display would report notes, words, stigmatizing-language events, and event rates by section, keep the whole-note rate as a secondary summary, and label absolute rates separately from interaction RRs.
 
 % Authoring support should also account for the intended audience of each section. Clinicians use these keywords at different rates in clinician-facing narrative and patient-facing instructions, and the same keyword may be stigmatizing or neutral depending on its context. A section-aware tool should therefore show the full sentence instead of flagging a keyword on its own, and any review threshold should be set with section-specific human labels.
@@ -348,7 +349,7 @@ MIMIC-IV-Note version 2.2\cite{mimicnote2023} and MIMIC-IV version 3.1\cite{mimi
 
 \section*{Ethics Statement}
 
-This study was a secondary analysis of existing deidentified records from MIMIC-IV and MIMIC-IV-Note and involved no experiments with, or recruitment of, human participants. Separate ethics approval was therefore not required. The authors who accessed the data obtained PhysioNet credentialed access and signed the data use agreement, and all analyses, including LLM verification, were run locally in accordance with that agreement.
+This study did not require ethics approval because it involved no human participants and used only existing deidentified data from MIMIC-IV and MIMIC-IV-Note. All authors who accessed the data obtained PhysioNet credentialed access to MIMIC and complied with its data use agreement.
 
 % \begin{thebibliography}{99}
 
