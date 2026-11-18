@@ -74,8 +74,8 @@ were associated with the absolute prevalence in patient-facing DI and with the r
 \section{Materials and Methods}
 
 \subsection{Overall Pipeline}
-Overall Pipeline Our study proceeded in three stages ( Figure~\ref{fig:framework}). 
-First, we developed and validated a sentence-level stigmatizing language classifier using an annotated clinical notes dateset with ground-truth labels.
+Our study proceeded in three stages (Figure~\ref{fig:framework}). 
+First, we developed and validated a sentence-level stigmatizing language classifier using an annotated clinical notes dataset with ground-truth labels.
 %Part A measures stigmatizing language. A classifier is applied to every sentence, and its labels are summed within each section of each note.\td{Should this stage focus on developing and validating the stigmatizing language classifier using the well-annotated dataset, since that is where we have ground-truth labels? Applying the classifier to MIMIC would then be the second stage.} 
 Second, we applied this classifier to discharge summaries in MIMIC-IV, a large clinical dataset with linked demographic and diagnostic records, to score clinician-facing (BHC and HPI) and patient-facing (DI) sections, while using large language models (LLMs) to verify disease cohorts defined by diagnosis codes against the clinical notes.
 %Part B defines the sections and patient groups to be compared. Identity groups come from demographic and administrative records, disease cohorts come from diagnosis codes, and LLM verification checks that these disease labels reflect what the note documents, only conditions verified by all five LLMs enter the disease analysis of Model 2.\td{These are details and can go in the later sections. Data processing may not need to be a separate stage. Instead, the second stage could be applying the classifier to MIMIC. Please also briefly explain why we use MIMIC here, e.g., its scale and its linked demographic and diagnostic data, which allow analysis across patient groups.}
@@ -145,7 +145,7 @@ Eight disease cohorts (substance use disorder, serious mental illness, sickle ce
 were defined from the ICD-9 and ICD-10 diagnosis codes recorded for each admission, an admission belonged to a cohort when any of its codes matched the cohort's code list (Supplementary Table S27). Because diagnosis codes in MIMIC are recorded primarily for billing and may not reflect the clinical record,\cite{omalley2005, shivade2014} we verified each code-based assignment using large language models (LLMs).
 
 %To check these ICD codes reliability, 
-Five open-weight LLMs (GLM-4-32B, Gemma-4-31B, Qwen3.5-27B, Mistral-Small-3.2-24B, and gpt-oss-20b) run locally in accordance with the PhysioNet data use agreement
+Five open-weight LLMs (GLM-4-32B, Gemma-4-31B, Qwen3.5-27B, Mistral-Small-3.2-24B, and gpt-oss-20b) run locally in accordance with the PhysioNet data use agreement%
 %%\td{is this true?} %% yes
 , judged whether each admission–disease pair was supported by the past medical history, chief complaint, diagnoses, results, examination, and medications sections, without the ICD codes (prompts and settings in Supplementary Methods). The BHC, HPI, DI, and social history were withheld so that cohort assignment did not depend on the sections in which stigmatizing language was measured. For each admission–condition pair, the models were asked to respond with one of three labels: SUPPORTED, if the provided sections contained evidence that the patient had the condition; REFUTED, if they contained evidence that the patient did not; or INSUFFICIENT, if they did not contain enough information to decide. Responses that could not be mapped to one of these labels were treated as unparseable. %judged whether each admission-disease pair was supported by the past medical history, chief complaint, diagnoses, results, examination, and medications.
 
@@ -199,7 +199,7 @@ To examine whether the relative gap between clinician-facing and patient-facing 
 
 For each patient group, the interaction rate ratio (interaction RR) quantifies how the BHC versus DI RR differs between notes from patients in that group and notes from patients outside the group. Specifically, the interaction RR is the BHC versus DI RR among notes with the characteristic divided by the BHC versus DI RR among notes without it. An interaction RR above 1 indicates a wider relative gap between BHC and DI in that group, whereas an interaction RR below 1 indicates a narrower relative gap. Because an interaction RR is a ratio of two rate ratios, we report it together with the absolute rates of stigmatizing sentences per 1,000 words in BHC and DI for each group.
 
-Separate models were fitted for disease cohorts and for identity characteristics. The disease model included all eight LLM-verified disease together, comparing each condition with its absence. The identity model included documented race and ethnicity, sex, Medicaid status, limited English proficiency, and age, with White, male, non-Medicaid, and English-proficient patients serving as the reference categories. Both models controlled for all identity characteristics, the eight disease indicators, Charlson Comorbidity Index, and log length of stay.\cite{charlson1987,quan2005} Benjamini-Hochberg false discovery rate correction was applied separately to the eight disease interactions and the nine identity interactions.\cite{benjamini1995} Full model specifications and disease-stratified identity analyses are reported in the Supplement.
+Separate models were fitted for disease cohorts and for identity characteristics. The disease model included all eight LLM-verified disease cohorts together, comparing each condition with its absence. The identity model included documented race and ethnicity, sex, Medicaid status, limited English proficiency, and age, with White, male, non-Medicaid, and English-proficient patients serving as the reference categories. Both models controlled for all identity characteristics, the eight disease indicators, Charlson Comorbidity Index, and log length of stay.\cite{charlson1987,quan2005} Benjamini-Hochberg false discovery rate correction was applied separately to the eight disease interactions and the nine identity interactions.\cite{benjamini1995} Full model specifications and disease-stratified identity analyses are reported in the Supplement.
 \section{Results}
 
 \subsection{Section rates}
@@ -264,7 +264,7 @@ Obesity & 16,848 (61.0) & 4,337 & 0.630 & 0.98 & 174 & 0.045 & 0.7 & 1.329 (1.11
 
 \subsection{Classifier performance and sensitivity analyses}
 \label{sec:sensitivity}
-The fine-tuned sentence-window GatorTron classifier achieved validation macro-F1 of 0.9294 and accuracy of 0.9361, test macro-F1 was 0.9281 and accuracy was 0.9327 (Supplementary Table S1). These held-out metrics describe sentence-level binary classification and do not establish calibration within each section.
+The fine-tuned sentence-window GatorTron classifier achieved validation macro-F1 of 0.9294 and accuracy of 0.9361, test macro-F1 was 0.9281 and accuracy was 0.9327 (Supplementary Table S1).
 
 The Word10 classifier had higher test macro-F1 and accuracy (0.9429 and 0.9465) than the sentence-window classifier (0.9281 and 0.9327) and was used as a context-window sensitivity analysis.
 
@@ -280,7 +280,7 @@ Paired Wilcoxon tests agreed with the GEE contrasts in direction (all $P<.001$).
 \subsection{Principal findings}
 
 Within the same discharge summaries, clinicians wrote far more stigmatizing language in the sections meant for other clinicians than in the instructions meant for patients: for the same amount of text, the rate of stigmatizing language in BHC was 8.21 times the rate in DI (95\% CI, 7.96-8.47, $P<.001$), and the rate in HPI was 7.21 times the rate in DI. Clinicians also used the keywords themselves much more often in clinician-facing narrative. %\td{now i see why you mention keywords in the results, make the motivation clear that why looking at keywords and how. }
-Among disease cohorts, the gap was narrowest for substance use disorder, serious mental illness, and sickle cell disease, whose patient-facing instructions carried the most stigmatizing language, and widest for obesity and diabetes.%\td{any reason why possibly? }
+Among disease cohorts, the gap was narrowest for substance use disorder, serious mental illness, and sickle cell disease, whose patient-facing instructions carried the most stigmatizing language, and widest for obesity and diabetes. %\td{any reason why possibly? }
 These patterns likely reflect differences in the clinical topics addressed in patient instructions, which more often discuss adherence, pain control, or substance use in the former conditions than in routine metabolic management.
 
 \subsection{Clinician-facing and patient-facing text}
